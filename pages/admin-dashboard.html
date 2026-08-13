@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+    <title>Admin Dashboard</title>
+
+    <link rel="stylesheet"
+        href="../css/admin-dashboard.css">
+
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+
+    <nav class="navbar">
+
+        <div class="logo-section">
+
+            <img src="../assets/logo.png"
+                alt="School Logo">
+
+            <div>
+
+                <h1>Christ Convent English Academy</h1>
+                <p>ERP Portal</p>
+
+            </div>
+
+        </div>
+
+
+        <div class="navbar-right">
+
+    <button class="notification-btn">
+
+        🔔
+
+        <span class="notification-count">
+
+            2
+
+        </span>
+
+    </button>
+
+    <button class="logout-btn">
+
+        Logout
+
+    </button>
+
+</div>
+
+    </nav>
+
+
+
+    <!-- MAIN CONTAINER -->
+
+
+    <div class="container">
+
+
+        <!-- SIDEBAR -->
+
+
+        <aside class="sidebar">
+
+<ul>
+
+<li id="dashboard">
+Dashboard
+</li>
+
+<li id="employee">
+Employee Management
+</li>
+
+<li id="student">
+Student Management
+</li>
+
+<li id="academic">
+Academic Management
+</li>
+
+<li id="department">
+Department Management
+</li>
+
+<li id="school">
+School Management
+</li>
+
+<li id="transport">
+Transport Management
+</li>
+
+<li id="udise">
+UDISE+ Management
+</li>
+
+<li id="apaar">
+APAAR Management
+</li>
+
+<li id="reports">
+Reports & Analytics
+</li>
+
+<li id="settings">
+System Settings
+</li>
+
+<li id="database">
+Database Management
+</li>
+
+</ul>
+
+</aside>
+
+
+
+        <!-- MAIN CONTENT -->
+
+
+        <main class="dashboard-content">
+
+
+            <div id="content-area">
+
+            </div>
+
+
+        </main>
+
+
+    </div>
+
+    <!-- SUPPORT CENTER -->
+
+<div class="support-center" id="supportCenter">
+
+    <div class="support-header">
+
+        <h2>Support Center</h2>
+
+        <button id="closeSupport">✖</button>
+
+    </div>
+
+
+    <div class="support-section">
+
+        <h3>Open Tickets</h3>
+
+
+        <div class="ticket-card">
+
+            <h4>Attendance Issue</h4>
+
+            <p>
+                Teacher reported that attendance
+                is not updating properly.
+            </p>
+
+            <span class="pending-status">
+
+                Pending
+
+            </span>
+
+        </div>
+
+
+        <div class="ticket-card">
+
+            <h4>Admission Portal</h4>
+
+            <p>
+                Management reported that
+                candidate list is unavailable.
+            </p>
+
+            <span class="pending-status">
+
+                Pending
+
+            </span>
+
+        </div>
+
+    </div>
+
+    <!-- QUICK ACTION MODAL -->
+
+<div class="modal-overlay" id="modalOverlay">
+
+    <div class="modal-box">
+
+        <div class="modal-header">
+
+            <h2 id="modalTitle">Modal Title</h2>
+
+            <button id="closeModal">✖</button>
+
+        </div>
+
+
+        <div id="modalContent">
+
+        </div>
+
+    </div>
+
+</div>
+
+
+</div>
+
+
+
+    <script type="module"
+        src="../Js/admin-dashboard.js">
+
+    </script>
+
+</body>
+
+</html>
