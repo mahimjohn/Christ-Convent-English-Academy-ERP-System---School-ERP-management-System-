@@ -90,251 +90,349 @@ const contentArea = document.getElementById("content-area");
 
 function loadDashboard() {
 
-contentArea.innerHTML = `
+    contentArea.innerHTML = `
 
-<!-- Welcome Card -->
+    <!-- WELCOME CARD -->
 
-<div class="welcome-card">
+    <div class="welcome-card">
 
-<h1>Welcome Back, Mahim!</h1>
+        <h1>Welcome Back, Mahim!</h1>
 
-<p>Administrator - Christ Convent English Academy ERP</p>
+        <p>
+            Administrator - Christ Convent English Academy ERP
+        </p>
 
-</div>
+    </div>
 
 
-<!-- Statistics Cards -->
+    <!-- STATISTICS CARDS -->
 
-<div class="cards-container">
+    <div class="cards-container">
 
-<div class="card">
+        <div class="card">
 
-<h3>Total Students</h3>
-<h1>0</h1>
+            <h3>Total Students</h3>
 
-</div>
+            <h1 id="dashboard-students">
+                0
+            </h1>
 
+        </div>
 
-<div class="card">
 
-<h3>Total Employees</h3>
-<h1>0</h1>
+        <div class="card">
 
-</div>
+            <h3>Total Employees</h3>
 
+            <h1 id="dashboard-employees">
+                0
+            </h1>
 
-<div class="card">
+        </div>
 
-<h3>Departments</h3>
-<h1>0</h1>
 
-</div>
+        <div class="card">
 
+            <h3>Departments</h3>
 
-<div class="card">
+            <h1 id="dashboard-departments">
+                0
+            </h1>
 
-<h3>Active Users</h3>
-<h1>0</h1>
+        </div>
 
-</div>
 
-</div>
+        <div class="card">
 
+            <h3>Active Users</h3>
 
+            <h1 id="dashboard-users">
+                0
+            </h1>
 
-<!-- Quick Actions -->
+        </div>
 
+    </div>
 
-<div class="quick-actions">
 
-<h2>Quick Actions</h2>
+    <!-- QUICK ACTIONS -->
 
-<div class="action-buttons">
+    <div class="quick-actions">
 
-<button id="add-user-btn">Add User</button>
+        <h2>Quick Actions</h2>
 
-<button id="create-class-btn">Create Class</button>
+        <div class="action-buttons">
 
-<button id="create-department-btn">Create Department</button>
+            <button id="add-user-btn">
+                Add User
+            </button>
 
-<button id="school-settings-btn">School Settings</button>
 
-</div>
+            <button id="create-class-btn">
+                Create Class
+            </button>
 
-</div>
 
+            <button id="create-department-btn">
+                Create Department
+            </button>
 
 
+            <button id="school-settings-btn">
+                School Settings
+            </button>
 
-<!-- Pending Approvals -->
+        </div>
 
+    </div>
 
-<div class="recent-activities">
 
-<h2>Pending Approvals</h2>
+    <!-- PENDING APPROVALS -->
 
-<ul>
+    <div class="recent-activities">
 
-<li>Admission Requests - 0</li>
+        <h2>Pending Approvals</h2>
 
-<li>Teacher Approval Requests - 0</li>
+        <ul>
 
-<li>APAAR Requests - 0</li>
+            <li>
+                Admission Requests - 0
+            </li>
 
-</ul>
+            <li>
+                Teacher Approval Requests - 0
+            </li>
 
-</div>
+            <li>
+                APAAR Requests - 0
+            </li>
 
+        </ul>
 
+    </div>
 
 
-<!-- Recent Activities -->
+    <!-- RECENT ACTIVITIES -->
 
+    <div class="recent-activities">
 
-<div class="recent-activities">
+        <h2>Recent Activities</h2>
 
-<h2>Recent Activities</h2>
+        <ul id="dashboard-activities">
 
-<ul>
+            <li>
+                No recent activities found.
+            </li>
 
-<li>No recent activities found.</li>
+        </ul>
 
-</ul>
+    </div>
 
-</div>
 
-<!-- ERP HEALTH STATUS -->
+    <!-- ERP HEALTH STATUS -->
 
-<div class="health-status">
+    <div class="health-status">
 
-<h2>ERP Health Status</h2>
+        <h2>ERP Health Status</h2>
 
 
-<div class="status-box">
+        <div class="status-box">
 
-<p>Firebase Authentication</p>
+            <p>Firebase Authentication</p>
 
-<span id="firebase-status">
+            <span id="firebase-status">
+                Checking...
+            </span>
 
-Checking...
+        </div>
 
-</span>
 
-</div>
+        <div class="status-box">
 
+            <p>Firestore Database</p>
 
+            <span id="firestore-status">
+                Checking...
+            </span>
 
-<div class="status-box">
+        </div>
 
-<p>Firestore Database</p>
 
-<span id="firestore-status">
+        <div class="status-box">
 
-Checking...
+            <p>Current User</p>
 
-</span>
+            <span id="user-status">
+                Checking...
+            </span>
 
-</div>
+        </div>
 
 
+        <div class="status-box">
 
-<div class="status-box">
+            <p>School Profile</p>
 
-<p>Current User</p>
+            <span id="school-status">
+                Checking...
+            </span>
 
-<span id="user-status">
+        </div>
 
-Checking...
 
-</span>
+        <div class="status-box">
 
-</div>
+            <p>ERP System</p>
 
+            <span id="erp-status">
+                Checking...
+            </span>
 
+        </div>
 
-<div class="status-box">
 
-<p>School Profile</p>
+        <div class="status-box">
 
-<span id="school-status">
+            <p>UDISE+ Integration</p>
 
-Checking...
+            <span class="status-pending">
+                Not Connected
+            </span>
 
-</span>
+        </div>
 
-</div>
 
+        <div class="status-box">
 
+            <p>APAAR Integration</p>
 
-<div class="status-box">
+            <span class="status-pending">
+                Not Connected
+            </span>
 
-<p>ERP System</p>
+        </div>
 
-<span id="erp-status">
 
-Checking...
+        <div class="status-box">
 
-</span>
+            <p>Backup Service</p>
 
-</div>
+            <span class="status-pending">
+                Pending Configuration
+            </span>
 
+        </div>
 
+    </div>
 
-<div class="status-box">
+    `;
 
-<p>UDISE+ Integration</p>
 
-<span>
+    setTimeout(() => {
 
-Not Connected
+        initializeQuickActions();
 
-</span>
+        checkHealthStatus();
 
-</div>
+        loadDashboardStatistics();
 
+    }, 100);
 
+}
 
-<div class="status-box">
+async function loadDashboardStatistics() {
 
-<p>APAAR Integration</p>
+    try {
 
-<span>
+        const studentsSnapshot =
+            await getDocs(
+                collection(db, "students")
+            );
 
-Not Connected
 
-</span>
+        const employeesSnapshot =
+            await getDocs(
+                collection(db, "employees")
+            );
 
-</div>
 
+        const departmentsSnapshot =
+            await getDocs(
+                collection(db, "departments")
+            );
 
 
-<div class="status-box">
+        const usersSnapshot =
+            await getDocs(
+                collection(db, "users")
+            );
 
-<p>Backup Service</p>
 
-<span>
+        const studentsElement =
+            document.getElementById(
+                "dashboard-students"
+            );
 
-Pending Configuration
 
-</span>
+        const employeesElement =
+            document.getElementById(
+                "dashboard-employees"
+            );
 
-</div>
 
+        const departmentsElement =
+            document.getElementById(
+                "dashboard-departments"
+            );
 
-</div>
 
+        const usersElement =
+            document.getElementById(
+                "dashboard-users"
+            );
 
-`;
 
+        if (studentsElement) {
 
+            studentsElement.textContent =
+                studentsSnapshot.size;
 
-setTimeout(() => {
+        }
 
-    initializeQuickActions();
 
-    checkHealthStatus();
+        if (employeesElement) {
 
-}, 100);
+            employeesElement.textContent =
+                employeesSnapshot.size;
+
+        }
+
+
+        if (departmentsElement) {
+
+            departmentsElement.textContent =
+                departmentsSnapshot.size;
+
+        }
+
+
+        if (usersElement) {
+
+            usersElement.textContent =
+                usersSnapshot.size;
+
+        }
+
+    }
+
+    catch(error) {
+
+        console.log(
+            "Dashboard statistics error:",
+            error
+        );
+
+    }
 
 }
 

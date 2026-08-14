@@ -10,7 +10,6 @@ body {
     overflow-x: hidden;
 }
 
-
 /* ==========================
          NAVBAR
 ========================== */
@@ -78,7 +77,6 @@ body {
     background: #1D4ED8;
 }
 
-
 /* ==========================
       MAIN CONTAINER
 ========================== */
@@ -87,8 +85,6 @@ body {
     display: flex;
     min-height: calc(100vh - 75px);
 }
-
-
 
 /* ==========================
          SIDEBAR
@@ -130,7 +126,6 @@ body {
     color: white;
 }
 
-
 /* ==========================
         MAIN CONTENT
 ========================== */
@@ -146,8 +141,6 @@ body {
 #content-area {
     width: 100%;
 }
-
-
 
 /* ==========================
         WELCOME CARD
@@ -173,8 +166,6 @@ body {
     color: gray;
     font-size: 17px;
 }
-
-
 
 /* ==========================
        OVERVIEW CARDS
@@ -217,8 +208,6 @@ body {
 
     font-size: 42px;
 }
-
-
 
 /* ==========================
        QUICK ACTIONS
@@ -266,8 +255,6 @@ body {
     background: #1D4ED8;
 }
 
-
-
 /* ==========================
       RECENT ACTIVITIES
 ========================== */
@@ -295,8 +282,6 @@ body {
 .recent-activities li {
     margin-bottom: 10px;
 }
-
-
 
 /* ==========================
         HEALTH STATUS
@@ -337,8 +322,6 @@ body {
     font-weight: bold;
 }
 
-
-
 /* ==========================
        SUPPORT CENTER
 ========================== */
@@ -369,8 +352,6 @@ body {
     right: 0;
 }
 
-
-
 /* ==========================
       SUPPORT HEADER
 ========================== */
@@ -396,8 +377,6 @@ body {
     cursor: pointer;
 }
 
-
-
 /* ==========================
       SUPPORT SECTION
 ========================== */
@@ -410,8 +389,6 @@ body {
     margin-bottom: 15px;
     color: #0F172A;
 }
-
-
 
 /* ==========================
         TICKET CARD
@@ -456,8 +433,6 @@ body {
     font-weight: bold;
 }
 
-
-
 /* ==========================
      NOTIFICATION COUNT
 ========================== */
@@ -484,8 +459,6 @@ body {
     font-weight: bold;
 }
 
-
-
 /* ==========================
         RESPONSIVE
 ========================== */
@@ -500,7 +473,6 @@ body {
 
 }
 
-
 @media(max-width:768px){
 
     .container{
@@ -509,13 +481,11 @@ body {
 
     }
 
-
     .sidebar{
 
         width:100%;
 
     }
-
 
     .dashboard-content{
 
@@ -523,7 +493,6 @@ body {
         padding:20px;
 
     }
-
 
     .cards-container{
 
@@ -558,13 +527,11 @@ body {
 
 }
 
-
 .modal-overlay.active{
 
     display:flex;
 
 }
-
 
 .modal-box{
 
@@ -580,7 +547,6 @@ body {
 
 }
 
-
 .modal-header{
 
     display:flex;
@@ -593,13 +559,11 @@ body {
 
 }
 
-
 .modal-header h2{
 
     color:#2563EB;
 
 }
-
 
 #closeModal{
 
@@ -613,10 +577,7 @@ body {
 
 }
 
-
-
 /* FORM DESIGN */
-
 
 .modal-form{
 
@@ -627,7 +588,6 @@ body {
     gap:20px;
 
 }
-
 
 .modal-form input,
 .modal-form select,
@@ -645,7 +605,6 @@ body {
 
 }
 
-
 .modal-form textarea{
 
     grid-column:span 2;
@@ -653,7 +612,6 @@ body {
     resize:none;
 
 }
-
 
 .modal-submit{
 
@@ -674,7 +632,6 @@ body {
     font-size:16px;
 
 }
-
 
 .modal-submit:hover{
 
@@ -738,7 +695,6 @@ color:white;
     padding: 20px;
 }
 
-
 /* TRANSPORT MODAL */
 
 #transport-modal > div {
@@ -752,7 +708,6 @@ color:white;
     box-shadow: 0 20px 50px rgba(0,0,0,0.25);
 }
 
-
 /* MODAL HEADER */
 
 #transport-modal-title {
@@ -760,7 +715,6 @@ color:white;
     font-size: 24px;
     font-weight: 700;
 }
-
 
 #transport-modal-close {
     width: 36px;
@@ -772,11 +726,9 @@ color:white;
     font-size: 18px;
 }
 
-
 #transport-modal-close:hover {
     background: #e5e5e5;
 }
-
 
 /* TRANSPORT FORM */
 
@@ -786,7 +738,6 @@ color:white;
     gap: 16px;
 }
 
-
 /* LABELS */
 
 #transport-modal-content label {
@@ -794,7 +745,6 @@ color:white;
     font-weight: 600;
     margin-bottom: -10px;
 }
-
 
 /* INPUTS */
 
@@ -823,14 +773,12 @@ color:white;
 
 }
 
-
 /* TEXTAREA */
 
 #transport-modal-content textarea {
     min-height: 100px;
     resize: vertical;
 }
-
 
 /* INPUT FOCUS */
 
@@ -844,7 +792,6 @@ color:white;
         0 0 0 3px rgba(37, 99, 235, 0.12);
 
 }
-
 
 /* SUBMIT BUTTON */
 
@@ -874,13 +821,11 @@ color:white;
 
 }
 
-
 #transport-modal-content button[type="submit"]:hover {
 
     background: #1d4ed8;
 
 }
-
 
 /* BUS / ROUTE DIRECTORY */
 
@@ -898,7 +843,6 @@ color:white;
 
 }
 
-
 .transport-list-item strong {
 
     display: block;
@@ -908,7 +852,6 @@ color:white;
     margin-bottom: 8px;
 
 }
-
 
 .transport-list-item p {
 
@@ -920,7 +863,6 @@ color:white;
 
 }
 
-
 /* MOBILE */
 
 @media (max-width: 768px) {
@@ -930,7 +872,6 @@ color:white;
         padding: 12px;
 
     }
-
 
     #transport-modal > div {
 
@@ -942,11 +883,54 @@ color:white;
 
     }
 
-
     #transport-modal-title {
 
         font-size: 20px;
 
     }
 
+}
+
+/* =========================================================
+   DASHBOARD HEALTH STATUS
+========================================================= */
+
+.health-status {
+    margin-top: 25px;
+}
+
+.health-status h2 {
+    margin-bottom: 20px;
+}
+
+.status-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 15px 18px;
+
+    margin-bottom: 10px;
+
+    background: #ffffff;
+
+    border: 1px solid #e5e7eb;
+
+    border-radius: 10px;
+}
+
+.status-box p {
+    margin: 0;
+
+    font-weight: 600;
+}
+
+.status-box span {
+    font-size: 14px;
+
+    font-weight: 600;
+}
+
+.status-pending {
+    color: #d97706;
 }
