@@ -934,3 +934,253 @@ color:white;
 .status-pending {
     color: #d97706;
 }
+
+/* ============================================================
+   FIXED ERP APPLICATION LAYOUT
+   Navbar + Sidebar Fixed
+   Dashboard Content Scrolls
+   ============================================================ */
+
+
+/* ------------------------------------------------------------
+   PAGE / BODY
+   ------------------------------------------------------------ */
+
+html,
+body {
+
+    width: 100%;
+    height: 100%;
+
+    margin: 0;
+    padding: 0;
+
+    overflow: hidden;
+
+}
+
+
+/* ------------------------------------------------------------
+   NAVBAR
+   ------------------------------------------------------------ */
+
+.navbar {
+
+    position: fixed;
+
+    top: 0;
+    left: 0;
+    right: 0;
+
+    height: 70px;
+
+    z-index: 1000;
+
+}
+
+
+/* ------------------------------------------------------------
+   MAIN CONTAINER
+   ------------------------------------------------------------ */
+
+.container {
+
+    position: fixed;
+
+    top: 70px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+
+    display: flex;
+
+    width: 100%;
+    height: calc(100vh - 70px);
+
+    overflow: hidden;
+
+}
+
+
+/* ------------------------------------------------------------
+   SIDEBAR
+   ------------------------------------------------------------ */
+
+.sidebar {
+
+    position: fixed;
+
+    top: 70px;
+    left: 0;
+    bottom: 0;
+
+    width: 250px;
+
+    height: calc(100vh - 70px);
+
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    flex-shrink: 0;
+
+    z-index: 900;
+
+}
+
+
+/* ------------------------------------------------------------
+   DASHBOARD CONTENT
+   ------------------------------------------------------------ */
+
+.dashboard-content {
+
+    position: fixed;
+
+    top: 70px;
+    left: 250px;
+    right: 0;
+    bottom: 0;
+
+    width: calc(100% - 250px);
+
+    height: calc(100vh - 70px);
+
+    padding: 25px;
+
+    box-sizing: border-box;
+
+    overflow-y: auto;
+    overflow-x: hidden;
+
+}
+
+
+/* ------------------------------------------------------------
+   CONTENT AREA
+   ------------------------------------------------------------ */
+
+#content-area {
+
+    width: 100%;
+
+    min-height: 100%;
+
+    box-sizing: border-box;
+
+}
+
+
+/* ------------------------------------------------------------
+   DASHBOARD SCROLLBAR
+   ------------------------------------------------------------ */
+
+.dashboard-content::-webkit-scrollbar {
+
+    width: 8px;
+
+}
+
+
+.dashboard-content::-webkit-scrollbar-track {
+
+    background: transparent;
+
+}
+
+
+.dashboard-content::-webkit-scrollbar-thumb {
+
+    background: #c5c5c5;
+
+    border-radius: 10px;
+
+}
+
+
+.dashboard-content::-webkit-scrollbar-thumb:hover {
+
+    background: #999;
+
+}
+
+
+/* ------------------------------------------------------------
+   SIDEBAR SCROLLBAR
+   ------------------------------------------------------------ */
+
+.sidebar::-webkit-scrollbar {
+
+    width: 6px;
+
+}
+
+
+.sidebar::-webkit-scrollbar-track {
+
+    background: transparent;
+
+}
+
+
+.sidebar::-webkit-scrollbar-thumb {
+
+    background: #c5c5c5;
+
+    border-radius: 10px;
+
+}
+
+
+/* ------------------------------------------------------------
+   TABLET
+   ------------------------------------------------------------ */
+
+@media (max-width: 900px) {
+
+    .sidebar {
+
+        width: 220px;
+
+    }
+
+
+    .dashboard-content {
+
+        left: 220px;
+
+        width: calc(100% - 220px);
+
+    }
+
+}
+
+
+/* ------------------------------------------------------------
+   MOBILE
+   ------------------------------------------------------------ */
+
+@media (max-width: 700px) {
+
+    .sidebar {
+
+        width: 250px;
+
+        transform: translateX(-100%);
+
+        transition:
+            transform 0.3s ease;
+
+    }
+
+
+    .dashboard-content {
+
+        left: 0;
+
+        width: 100%;
+
+        padding: 15px;
+
+    }
+
+}
