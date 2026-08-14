@@ -7232,6 +7232,8 @@ function loadTransportManagement() {
    INITIALIZE TRANSPORT MANAGEMENT
 ========================================================= */
 
+console.log("Initializing Transport Management...");
+
 function initializeTransportManagement() {
 
     const addBus =
