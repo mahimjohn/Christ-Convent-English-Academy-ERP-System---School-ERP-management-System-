@@ -6961,275 +6961,1699 @@ document
 
 
 
+/* =========================================================
+   TRANSPORT MANAGEMENT
+========================================================= */
+
 function loadTransportManagement() {
 
-contentArea.innerHTML = `
+    contentArea.innerHTML = `
 
-<!-- PAGE HEADER -->
+    <!-- PAGE HEADER -->
 
-<div class="welcome-card">
+    <div class="welcome-card">
 
-<h1>Transport Management</h1>
+        <h1>Transport Management</h1>
 
-<p>Manage school vehicles, drivers, routes and student transport assignments.</p>
+        <p>
+            Manage buses, drivers, routes, student allocations
+            and transport fees.
+        </p>
 
-</div>
+    </div>
 
 
+    <!-- TRANSPORT STATISTICS -->
 
-<!-- TRANSPORT STATISTICS -->
+    <div class="cards-container">
 
-<div class="cards-container">
+        <div class="card">
 
-<div class="card">
+            <h3>Total Buses</h3>
 
-<h3>Total Vehicles</h3>
+            <h1 id="transport-total-buses">0</h1>
 
-<h1 id="total-vehicles">0</h1>
+        </div>
 
-</div>
 
-<div class="card">
+        <div class="card">
 
-<h3>Total Drivers</h3>
+            <h3>Total Drivers</h3>
 
-<h1 id="total-drivers">0</h1>
+            <h1 id="transport-total-drivers">0</h1>
 
-</div>
+        </div>
 
-<div class="card">
 
-<h3>Active Routes</h3>
+        <div class="card">
 
-<h1 id="active-routes">0</h1>
+            <h3>Total Routes</h3>
 
-</div>
+            <h1 id="transport-total-routes">0</h1>
 
-<div class="card">
+        </div>
 
-<h3>Students Assigned</h3>
 
-<h1 id="students-assigned">0</h1>
+        <div class="card">
 
-</div>
+            <h3>Students Assigned</h3>
 
-</div>
+            <h1 id="transport-total-students">0</h1>
 
+        </div>
 
+    </div>
 
 
-<!-- QUICK ACTIONS -->
+    <!-- QUICK ACTIONS -->
 
-<div class="quick-actions">
+    <div class="quick-actions">
 
-<h2>Quick Actions</h2>
+        <h2>Quick Actions</h2>
 
-<div class="action-buttons">
+        <div class="action-buttons">
 
-<button id="manage-vehicles-btn">
+            <button id="add-bus-btn">
+                Add Bus
+            </button>
 
-Manage Vehicles
 
-</button>
+            <button id="assign-driver-btn">
+                Add Driver
+            </button>
 
-<button id="manage-drivers-btn">
 
-Manage Drivers
+            <button id="create-route-btn">
+                Create Route
+            </button>
 
-</button>
 
-<button id="manage-routes-btn">
+            <button id="assign-students-btn">
+                Assign Student
+            </button>
 
-Manage Routes
 
-</button>
+            <button id="transport-fees-btn">
+                Manage Fees
+            </button>
 
-<button id="assign-students-btn">
 
-Assign Students
+            <button id="transport-report-btn">
+                Generate Reports
+            </button>
 
-</button>
+        </div>
 
-<button id="transport-reports-btn">
+    </div>
 
-Transport Reports
 
-</button>
+    <!-- TRANSPORT OVERVIEW -->
 
-<button id="transport-settings-btn">
+    <div class="recent-activities">
 
-Transport Settings
+        <h2>Transport Overview</h2>
 
-</button>
+        <ul id="transport-overview-list">
 
-</div>
+            <li>
+                Loading transport information...
+            </li>
 
-</div>
+        </ul>
 
+    </div>
 
 
+    <!-- BUS DIRECTORY -->
 
-<div class="recent-activities">
+    <div class="recent-activities">
 
-<h2>Transport Overview</h2>
+        <h2>Bus Directory</h2>
 
-<ul>
+        <div id="transport-bus-list">
 
-<li>No transport information available.</li>
+            <p>
+                Loading buses...
+            </p>
 
-</ul>
+        </div>
 
-</div>
+    </div>
 
 
+    <!-- ROUTE DIRECTORY -->
 
+    <div class="recent-activities">
 
-<div class="recent-activities">
+        <h2>Route Directory</h2>
 
-<h2>Recent Activities</h2>
+        <div id="transport-route-list">
 
-<ul>
+            <p>
+                Loading routes...
+            </p>
 
-<li>No recent transport activities.</li>
+        </div>
 
-</ul>
+    </div>
 
-</div>
 
+    <!-- RECENT ACTIVITIES -->
 
+    <div class="recent-activities">
 
-<div class="recent-activities">
+        <h2>Recent Transport Activities</h2>
 
-<h2>Pending Requests</h2>
+        <ul id="transport-activity-list">
 
-<ul>
+            <li>
+                No recent transport activities found.
+            </li>
 
-<li>Vehicle Requests - 0</li>
+        </ul>
 
-<li>Route Requests - 0</li>
+    </div>
 
-<li>Student Assignment Requests - 0</li>
 
-</ul>
+    <!-- PENDING REQUESTS -->
 
-</div>
+    <div class="recent-activities">
 
-`;
+        <h2>Pending Requests</h2>
 
+        <ul>
 
-setTimeout(() => {
+            <li>
+                Bus Allocation Requests -
+                <span id="bus-request-count">0</span>
+            </li>
 
-initializeTransportManagement();
+            <li>
+                Route Change Requests -
+                <span id="route-request-count">0</span>
+            </li>
 
-},100);
+            <li>
+                Maintenance Requests -
+                <span id="maintenance-request-count">0</span>
+            </li>
 
+        </ul>
 
-}
+    </div>
 
-function initializeTransportManagement(){
 
+    <!-- TRANSPORT MODAL -->
 
+    <div id="transport-modal"
+         style="
+            display:none;
+            position:fixed;
+            inset:0;
+            background:rgba(0,0,0,0.55);
+            z-index:9999;
+            align-items:center;
+            justify-content:center;
+         ">
 
-const manageVehicles =
-document.getElementById("manage-vehicles-btn");
+        <div
+            style="
+                background:white;
+                width:min(550px,90%);
+                max-height:90vh;
+                overflow-y:auto;
+                padding:30px;
+                border-radius:12px;
+            "
+        >
 
-const manageDrivers =
-document.getElementById("manage-drivers-btn");
+            <div
+                style="
+                    display:flex;
+                    justify-content:space-between;
+                    align-items:center;
+                    margin-bottom:20px;
+                "
+            >
 
-const manageRoutes =
-document.getElementById("manage-routes-btn");
+                <h2 id="transport-modal-title">
+                    Transport
+                </h2>
 
-const assignStudents =
-document.getElementById("assign-students-btn");
+                <button
+                    id="transport-modal-close"
+                    type="button"
+                >
+                    ✕
+                </button>
 
-const transportReports =
-document.getElementById("transport-reports-btn");
+            </div>
 
-const transportSettings =
-document.getElementById("transport-settings-btn");
 
+            <div id="transport-modal-content"></div>
 
+        </div>
 
+    </div>
 
-if(addBus){
+    `;
 
-addBus.addEventListener("click",()=>{
 
-alert("Add Bus Function Coming Soon.");
+    setTimeout(() => {
 
-});
+        initializeTransportManagement();
 
-}
-
-
-
-
-if(assignDriver){
-
-assignDriver.addEventListener("click",()=>{
-
-alert("Assign Driver Function Coming Soon.");
-
-});
-
-}
-
-
-
-
-if(createRoute){
-
-createRoute.addEventListener("click",()=>{
-
-alert("Create Route Function Coming Soon.");
-
-});
-
-}
-
-
-
-
-if(assignStudents){
-
-assignStudents.addEventListener("click",()=>{
-
-alert("Assign Students Function Coming Soon.");
-
-});
-
-}
-
-
-
-
-if(transportFees){
-
-transportFees.addEventListener("click",()=>{
-
-alert("Transport Fees Function Coming Soon.");
-
-});
-
-}
-
-
-
-
-if(generateReports){
-
-generateReports.addEventListener("click",()=>{
-
-alert("Generate Reports Function Coming Soon.");
-
-});
+    }, 100);
 
 }
 
 
+/* =========================================================
+   INITIALIZE TRANSPORT MANAGEMENT
+========================================================= */
+
+function initializeTransportManagement() {
+
+    const addBus =
+        document.getElementById("add-bus-btn");
+
+
+    const addDriver =
+        document.getElementById("assign-driver-btn");
+
+
+    const createRoute =
+        document.getElementById("create-route-btn");
+
+
+    const assignStudent =
+        document.getElementById("assign-students-btn");
+
+
+    const transportFees =
+        document.getElementById("transport-fees-btn");
+
+
+    const generateReports =
+        document.getElementById("transport-report-btn");
+
+
+    const closeModal =
+        document.getElementById("transport-modal-close");
+
+
+    if (addBus) {
+
+        addBus.addEventListener("click", () => {
+
+            openTransportModal("Add Bus");
+
+            document.getElementById(
+                "transport-modal-content"
+            ).innerHTML = `
+
+                <form id="transport-bus-form">
+
+                    <label>Bus Number</label>
+
+                    <input
+                        type="text"
+                        id="transport-bus-number"
+                        placeholder="Example: BUS-01"
+                        required
+                    >
+
+
+                    <label>Registration Number</label>
+
+                    <input
+                        type="text"
+                        id="transport-bus-registration"
+                        placeholder="Example: MP16AB1234"
+                        required
+                    >
+
+
+                    <label>Bus Capacity</label>
+
+                    <input
+                        type="number"
+                        id="transport-bus-capacity"
+                        min="1"
+                        placeholder="40"
+                        required
+                    >
+
+
+                    <label>Bus Type</label>
+
+                    <select id="transport-bus-type">
+
+                        <option value="School Bus">
+                            School Bus
+                        </option>
+
+                        <option value="Mini Bus">
+                            Mini Bus
+                        </option>
+
+                    </select>
+
+
+                    <label>Status</label>
+
+                    <select id="transport-bus-status">
+
+                        <option value="Active">
+                            Active
+                        </option>
+
+                        <option value="Maintenance">
+                            Maintenance
+                        </option>
+
+                        <option value="Inactive">
+                            Inactive
+                        </option>
+
+                    </select>
+
+
+                    <button
+                        type="submit"
+                    >
+                        Add Bus
+                    </button>
+
+                </form>
+
+            `;
+
+
+            document.getElementById(
+                "transport-bus-form"
+            ).addEventListener(
+                "submit",
+                createTransportBusFunction
+            );
+
+        });
+
+    }
+
+
+    if (addDriver) {
+
+        addDriver.addEventListener("click", () => {
+
+            openTransportModal("Add Driver");
+
+            document.getElementById(
+                "transport-modal-content"
+            ).innerHTML = `
+
+                <form id="transport-driver-form">
+
+                    <label>Driver Name</label>
+
+                    <input
+                        type="text"
+                        id="transport-driver-name"
+                        required
+                    >
+
+
+                    <label>Phone Number</label>
+
+                    <input
+                        type="tel"
+                        id="transport-driver-phone"
+                        required
+                    >
+
+
+                    <label>Driving Licence Number</label>
+
+                    <input
+                        type="text"
+                        id="transport-driver-license"
+                        required
+                    >
+
+
+                    <label>Assigned Bus</label>
+
+                    <input
+                        type="text"
+                        id="transport-driver-bus"
+                        placeholder="Example: BUS-01"
+                    >
+
+
+                    <label>Status</label>
+
+                    <select id="transport-driver-status">
+
+                        <option value="Active">
+                            Active
+                        </option>
+
+                        <option value="Inactive">
+                            Inactive
+                        </option>
+
+                    </select>
+
+
+                    <button
+                        type="submit"
+                    >
+                        Add Driver
+                    </button>
+
+                </form>
+
+            `;
+
+
+            document.getElementById(
+                "transport-driver-form"
+            ).addEventListener(
+                "submit",
+                createTransportDriverFunction
+            );
+
+        });
+
+    }
+
+
+    if (createRoute) {
+
+        createRoute.addEventListener("click", () => {
+
+            openTransportModal("Create Route");
+
+            document.getElementById(
+                "transport-modal-content"
+            ).innerHTML = `
+
+                <form id="transport-route-form">
+
+                    <label>Route Name</label>
+
+                    <input
+                        type="text"
+                        id="transport-route-name"
+                        placeholder="Example: Route A"
+                        required
+                    >
+
+
+                    <label>Route Number</label>
+
+                    <input
+                        type="text"
+                        id="transport-route-number"
+                        placeholder="Example: R-01"
+                        required
+                    >
+
+
+                    <label>Starting Point</label>
+
+                    <input
+                        type="text"
+                        id="transport-route-start"
+                        required
+                    >
+
+
+                    <label>Destination</label>
+
+                    <input
+                        type="text"
+                        id="transport-route-destination"
+                        required
+                    >
+
+
+                    <label>Stops</label>
+
+                    <textarea
+                        id="transport-route-stops"
+                        placeholder="Enter stops separated by commas"
+                    ></textarea>
+
+
+                    <label>Assigned Bus</label>
+
+                    <input
+                        type="text"
+                        id="transport-route-bus"
+                        placeholder="Example: BUS-01"
+                    >
+
+
+                    <button
+                        type="submit"
+                    >
+                        Create Route
+                    </button>
+
+                </form>
+
+            `;
+
+
+            document.getElementById(
+                "transport-route-form"
+            ).addEventListener(
+                "submit",
+                createTransportRouteFunction
+            );
+
+        });
+
+    }
+
+
+    if (assignStudent) {
+
+        assignStudent.addEventListener("click", () => {
+
+            openTransportModal("Assign Student");
+
+            document.getElementById(
+                "transport-modal-content"
+            ).innerHTML = `
+
+                <form id="transport-student-form">
+
+                    <label>Student Name</label>
+
+                    <input
+                        type="text"
+                        id="transport-student-name"
+                        required
+                    >
+
+
+                    <label>Student ID</label>
+
+                    <input
+                        type="text"
+                        id="transport-student-id"
+                        required
+                    >
+
+
+                    <label>Class</label>
+
+                    <input
+                        type="text"
+                        id="transport-student-class"
+                        required
+                    >
+
+
+                    <label>Route</label>
+
+                    <input
+                        type="text"
+                        id="transport-student-route"
+                        placeholder="Example: R-01"
+                        required
+                    >
+
+
+                    <label>Pickup Point</label>
+
+                    <input
+                        type="text"
+                        id="transport-student-pickup"
+                        required
+                    >
+
+
+                    <label>Transport Status</label>
+
+                    <select id="transport-student-status">
+
+                        <option value="Active">
+                            Active
+                        </option>
+
+                        <option value="Inactive">
+                            Inactive
+                        </option>
+
+                    </select>
+
+
+                    <button
+                        type="submit"
+                    >
+                        Assign Student
+                    </button>
+
+                </form>
+
+            `;
+
+
+            document.getElementById(
+                "transport-student-form"
+            ).addEventListener(
+                "submit",
+                assignTransportStudentFunction
+            );
+
+        });
+
+    }
+
+
+    if (transportFees) {
+
+        transportFees.addEventListener("click", () => {
+
+            openTransportModal("Transport Fees");
+
+            document.getElementById(
+                "transport-modal-content"
+            ).innerHTML = `
+
+                <form id="transport-fee-form">
+
+                    <label>Student ID</label>
+
+                    <input
+                        type="text"
+                        id="transport-fee-student-id"
+                        required
+                    >
+
+
+                    <label>Student Name</label>
+
+                    <input
+                        type="text"
+                        id="transport-fee-student-name"
+                        required
+                    >
+
+
+                    <label>Monthly Fee</label>
+
+                    <input
+                        type="number"
+                        id="transport-fee-amount"
+                        min="0"
+                        required
+                    >
+
+
+                    <label>Payment Status</label>
+
+                    <select id="transport-fee-status">
+
+                        <option value="Pending">
+                            Pending
+                        </option>
+
+                        <option value="Paid">
+                            Paid
+                        </option>
+
+                        <option value="Partial">
+                            Partial
+                        </option>
+
+                    </select>
+
+
+                    <button
+                        type="submit"
+                    >
+                        Save Fee Record
+                    </button>
+
+                </form>
+
+            `;
+
+
+            document.getElementById(
+                "transport-fee-form"
+            ).addEventListener(
+                "submit",
+                createTransportFeeFunction
+            );
+
+        });
+
+    }
+
+
+    if (generateReports) {
+
+        generateReports.addEventListener("click", () => {
+
+            generateTransportReportFunction();
+
+        });
+
+    }
+
+
+    if (closeModal) {
+
+        closeModal.addEventListener("click", () => {
+
+            closeTransportModal();
+
+        });
+
+    }
+
+
+    loadTransportStatistics();
 
 }
 
+
+/* =========================================================
+   OPEN TRANSPORT MODAL
+========================================================= */
+
+function openTransportModal(title) {
+
+    const modal =
+        document.getElementById("transport-modal");
+
+
+    const modalTitle =
+        document.getElementById(
+            "transport-modal-title"
+        );
+
+
+    if (!modal) return;
+
+
+    modalTitle.textContent = title;
+
+    modal.style.display = "flex";
+
+}
+
+
+/* =========================================================
+   CLOSE TRANSPORT MODAL
+========================================================= */
+
+function closeTransportModal() {
+
+    const modal =
+        document.getElementById("transport-modal");
+
+
+    if (modal) {
+
+        modal.style.display = "none";
+
+    }
+
+}
+
+
+/* =========================================================
+   CREATE BUS
+========================================================= */
+
+async function createTransportBusFunction(event) {
+
+    event.preventDefault();
+
+
+    const busNumber =
+        document.getElementById(
+            "transport-bus-number"
+        ).value.trim();
+
+
+    const registrationNumber =
+        document.getElementById(
+            "transport-bus-registration"
+        ).value.trim();
+
+
+    const capacity =
+        document.getElementById(
+            "transport-bus-capacity"
+        ).value;
+
+
+    const busType =
+        document.getElementById(
+            "transport-bus-type"
+        ).value;
+
+
+    const status =
+        document.getElementById(
+            "transport-bus-status"
+        ).value;
+
+
+    try {
+
+        await addDoc(
+
+            collection(
+                db,
+                "transport_buses"
+            ),
+
+            {
+
+                BusNumber: busNumber,
+
+                RegistrationNumber:
+                    registrationNumber,
+
+                Capacity:
+                    Number(capacity),
+
+                BusType:
+                    busType,
+
+                Status:
+                    status,
+
+                CreatedAt:
+                    serverTimestamp()
+
+            }
+
+        );
+
+
+        alert("Bus added successfully.");
+
+        closeTransportModal();
+
+        loadTransportManagement();
+
+    }
+
+    catch(error) {
+
+        console.log(error);
+
+        alert(error.message);
+
+    }
+
+}
+
+
+/* =========================================================
+   CREATE DRIVER
+========================================================= */
+
+async function createTransportDriverFunction(event) {
+
+    event.preventDefault();
+
+
+    const name =
+        document.getElementById(
+            "transport-driver-name"
+        ).value.trim();
+
+
+    const phone =
+        document.getElementById(
+            "transport-driver-phone"
+        ).value.trim();
+
+
+    const license =
+        document.getElementById(
+            "transport-driver-license"
+        ).value.trim();
+
+
+    const bus =
+        document.getElementById(
+            "transport-driver-bus"
+        ).value.trim();
+
+
+    const status =
+        document.getElementById(
+            "transport-driver-status"
+        ).value;
+
+
+    try {
+
+        await addDoc(
+
+            collection(
+                db,
+                "transport_drivers"
+            ),
+
+            {
+
+                DriverName:
+                    name,
+
+                Phone:
+                    phone,
+
+                DrivingLicense:
+                    license,
+
+                AssignedBus:
+                    bus,
+
+                Status:
+                    status,
+
+                CreatedAt:
+                    serverTimestamp()
+
+            }
+
+        );
+
+
+        alert("Driver added successfully.");
+
+        closeTransportModal();
+
+        loadTransportManagement();
+
+    }
+
+    catch(error) {
+
+        console.log(error);
+
+        alert(error.message);
+
+    }
+
+}
+
+
+/* =========================================================
+   CREATE ROUTE
+========================================================= */
+
+async function createTransportRouteFunction(event) {
+
+    event.preventDefault();
+
+
+    const routeName =
+        document.getElementById(
+            "transport-route-name"
+        ).value.trim();
+
+
+    const routeNumber =
+        document.getElementById(
+            "transport-route-number"
+        ).value.trim();
+
+
+    const start =
+        document.getElementById(
+            "transport-route-start"
+        ).value.trim();
+
+
+    const destination =
+        document.getElementById(
+            "transport-route-destination"
+        ).value.trim();
+
+
+    const stops =
+        document.getElementById(
+            "transport-route-stops"
+        ).value.trim();
+
+
+    const bus =
+        document.getElementById(
+            "transport-route-bus"
+        ).value.trim();
+
+
+    try {
+
+        await addDoc(
+
+            collection(
+                db,
+                "transport_routes"
+            ),
+
+            {
+
+                RouteName:
+                    routeName,
+
+                RouteNumber:
+                    routeNumber,
+
+                StartingPoint:
+                    start,
+
+                Destination:
+                    destination,
+
+                Stops:
+                    stops,
+
+                AssignedBus:
+                    bus,
+
+                Status:
+                    "Active",
+
+                CreatedAt:
+                    serverTimestamp()
+
+            }
+
+        );
+
+
+        alert("Route created successfully.");
+
+        closeTransportModal();
+
+        loadTransportManagement();
+
+    }
+
+    catch(error) {
+
+        console.log(error);
+
+        alert(error.message);
+
+    }
+
+}
+
+
+/* =========================================================
+   ASSIGN STUDENT
+========================================================= */
+
+async function assignTransportStudentFunction(event) {
+
+    event.preventDefault();
+
+
+    const studentName =
+        document.getElementById(
+            "transport-student-name"
+        ).value.trim();
+
+
+    const studentId =
+        document.getElementById(
+            "transport-student-id"
+        ).value.trim();
+
+
+    const studentClass =
+        document.getElementById(
+            "transport-student-class"
+        ).value.trim();
+
+
+    const route =
+        document.getElementById(
+            "transport-student-route"
+        ).value.trim();
+
+
+    const pickup =
+        document.getElementById(
+            "transport-student-pickup"
+        ).value.trim();
+
+
+    const status =
+        document.getElementById(
+            "transport-student-status"
+        ).value;
+
+
+    try {
+
+        await addDoc(
+
+            collection(
+                db,
+                "transport_students"
+            ),
+
+            {
+
+                StudentName:
+                    studentName,
+
+                StudentID:
+                    studentId,
+
+                Class:
+                    studentClass,
+
+                Route:
+                    route,
+
+                PickupPoint:
+                    pickup,
+
+                Status:
+                    status,
+
+                CreatedAt:
+                    serverTimestamp()
+
+            }
+
+        );
+
+
+        alert(
+            "Student assigned to transport successfully."
+        );
+
+
+        closeTransportModal();
+
+        loadTransportManagement();
+
+    }
+
+    catch(error) {
+
+        console.log(error);
+
+        alert(error.message);
+
+    }
+
+}
+
+
+/* =========================================================
+   CREATE TRANSPORT FEE
+========================================================= */
+
+async function createTransportFeeFunction(event) {
+
+    event.preventDefault();
+
+
+    const studentId =
+        document.getElementById(
+            "transport-fee-student-id"
+        ).value.trim();
+
+
+    const studentName =
+        document.getElementById(
+            "transport-fee-student-name"
+        ).value.trim();
+
+
+    const amount =
+        document.getElementById(
+            "transport-fee-amount"
+        ).value;
+
+
+    const status =
+        document.getElementById(
+            "transport-fee-status"
+        ).value;
+
+
+    try {
+
+        await addDoc(
+
+            collection(
+                db,
+                "transport_fees"
+            ),
+
+            {
+
+                StudentID:
+                    studentId,
+
+                StudentName:
+                    studentName,
+
+                MonthlyFee:
+                    Number(amount),
+
+                PaymentStatus:
+                    status,
+
+                CreatedAt:
+                    serverTimestamp()
+
+            }
+
+        );
+
+
+        alert(
+            "Transport fee record saved successfully."
+        );
+
+
+        closeTransportModal();
+
+        loadTransportManagement();
+
+    }
+
+    catch(error) {
+
+        console.log(error);
+
+        alert(error.message);
+
+    }
+
+}
+
+
+/* =========================================================
+   TRANSPORT STATISTICS
+========================================================= */
+
+async function loadTransportStatistics() {
+
+    try {
+
+        const busesSnapshot =
+            await getDocs(
+                collection(
+                    db,
+                    "transport_buses"
+                )
+            );
+
+
+        const driversSnapshot =
+            await getDocs(
+                collection(
+                    db,
+                    "transport_drivers"
+                )
+            );
+
+
+        const routesSnapshot =
+            await getDocs(
+                collection(
+                    db,
+                    "transport_routes"
+                )
+            );
+
+
+        const studentsSnapshot =
+            await getDocs(
+                collection(
+                    db,
+                    "transport_students"
+                )
+            );
+
+
+        const buses =
+            busesSnapshot.size;
+
+
+        const drivers =
+            driversSnapshot.size;
+
+
+        const routes =
+            routesSnapshot.size;
+
+
+        const students =
+            studentsSnapshot.size;
+
+
+        const totalBuses =
+            document.getElementById(
+                "transport-total-buses"
+            );
+
+
+        const totalDrivers =
+            document.getElementById(
+                "transport-total-drivers"
+            );
+
+
+        const totalRoutes =
+            document.getElementById(
+                "transport-total-routes"
+            );
+
+
+        const totalStudents =
+            document.getElementById(
+                "transport-total-students"
+            );
+
+
+        if (totalBuses)
+            totalBuses.textContent = buses;
+
+
+        if (totalDrivers)
+            totalDrivers.textContent = drivers;
+
+
+        if (totalRoutes)
+            totalRoutes.textContent = routes;
+
+
+        if (totalStudents)
+            totalStudents.textContent = students;
+
+
+        loadTransportOverview(
+            buses,
+            drivers,
+            routes,
+            students
+        );
+
+
+        loadTransportDirectories(
+            busesSnapshot,
+            routesSnapshot
+        );
+
+    }
+
+    catch(error) {
+
+        console.log(
+            "Transport statistics error:",
+            error
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   TRANSPORT OVERVIEW
+========================================================= */
+
+function loadTransportOverview(
+    buses,
+    drivers,
+    routes,
+    students
+) {
+
+    const list =
+        document.getElementById(
+            "transport-overview-list"
+        );
+
+
+    if (!list) return;
+
+
+    list.innerHTML = `
+
+        <li>
+            Total buses: ${buses}
+        </li>
+
+        <li>
+            Total drivers: ${drivers}
+        </li>
+
+        <li>
+            Total routes: ${routes}
+        </li>
+
+        <li>
+            Students using transport: ${students}
+        </li>
+
+    `;
+
+}
+
+
+/* =========================================================
+   BUS + ROUTE DIRECTORY
+========================================================= */
+
+function loadTransportDirectories(
+    busesSnapshot,
+    routesSnapshot
+) {
+
+    const busList =
+        document.getElementById(
+            "transport-bus-list"
+        );
+
+
+    const routeList =
+        document.getElementById(
+            "transport-route-list"
+        );
+
+
+    if (busList) {
+
+        if (busesSnapshot.empty) {
+
+            busList.innerHTML =
+                "<p>No buses have been added.</p>";
+
+        }
+
+        else {
+
+            busList.innerHTML = "";
+
+            busesSnapshot.forEach(
+                (docSnapshot) => {
+
+                    const data =
+                        docSnapshot.data();
+
+
+                    busList.innerHTML += `
+
+                        <div class="transport-list-item">
+
+                            <strong>
+                                ${data.BusNumber || "N/A"}
+                            </strong>
+
+                            <p>
+                                Registration:
+                                ${data.RegistrationNumber || "N/A"}
+                            </p>
+
+                            <p>
+                                Capacity:
+                                ${data.Capacity || 0}
+                            </p>
+
+                            <p>
+                                Status:
+                                ${data.Status || "N/A"}
+                            </p>
+
+                        </div>
+
+                    `;
+
+                }
+            );
+
+        }
+
+    }
+
+
+    if (routeList) {
+
+        if (routesSnapshot.empty) {
+
+            routeList.innerHTML =
+                "<p>No routes have been created.</p>";
+
+        }
+
+        else {
+
+            routeList.innerHTML = "";
+
+            routesSnapshot.forEach(
+                (docSnapshot) => {
+
+                    const data =
+                        docSnapshot.data();
+
+
+                    routeList.innerHTML += `
+
+                        <div class="transport-list-item">
+
+                            <strong>
+                                ${data.RouteName || "N/A"}
+                            </strong>
+
+                            <p>
+                                Route:
+                                ${data.RouteNumber || "N/A"}
+                            </p>
+
+                            <p>
+                                ${data.StartingPoint || "N/A"}
+                                →
+                                ${data.Destination || "N/A"}
+                            </p>
+
+                            <p>
+                                Bus:
+                                ${data.AssignedBus || "Not assigned"}
+                            </p>
+
+                        </div>
+
+                    `;
+
+                }
+            );
+
+        }
+
+    }
+
+}
+
+
+/* =========================================================
+   TRANSPORT REPORT
+========================================================= */
+
+async function generateTransportReportFunction() {
+
+    try {
+
+        const buses =
+            await getDocs(
+                collection(
+                    db,
+                    "transport_buses"
+                )
+            );
+
+
+        const drivers =
+            await getDocs(
+                collection(
+                    db,
+                    "transport_drivers"
+                )
+            );
+
+
+        const routes =
+            await getDocs(
+                collection(
+                    db,
+                    "transport_routes"
+                )
+            );
+
+
+        const students =
+            await getDocs(
+                collection(
+                    db,
+                    "transport_students"
+                )
+            );
+
+
+        const fees =
+            await getDocs(
+                collection(
+                    db,
+                    "transport_fees"
+                )
+            );
+
+
+        alert(
+
+            "TRANSPORT REPORT\n\n" +
+
+            "Total Buses: " +
+            buses.size +
+
+            "\nTotal Drivers: " +
+            drivers.size +
+
+            "\nTotal Routes: " +
+            routes.size +
+
+            "\nStudents Assigned: " +
+            students.size +
+
+            "\nFee Records: " +
+            fees.size
+
+        );
+
+    }
+
+    catch(error) {
+
+        console.log(error);
+
+        alert(error.message);
+
+    }
+
+}
 
 function loadUdiseManagement(){
 
