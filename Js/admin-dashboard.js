@@ -438,2075 +438,2983 @@ async function loadDashboardStatistics() {
 
 /**********************************************************************
  * EMPLOYEE MANAGEMENT
+ * PHASE 1
  **********************************************************************/
 
 
 function loadEmployeeManagement() {
 
-contentArea.innerHTML = `
+    contentArea.innerHTML = `
 
-<!-- PAGE HEADER -->
+    <!-- PAGE HEADER -->
 
-<div class="welcome-card">
+    <div class="welcome-card">
 
-<h1>Employee Management</h1>
+        <h1>Employee Management</h1>
 
-<p>Manage all school employees and staff.</p>
+        <p>
+            Manage all school employees and staff.
+        </p>
 
-</div>
+    </div>
 
 
+    <!-- EMPLOYEE STATISTICS -->
 
-<!-- EMPLOYEE STATISTICS -->
+    <div class="cards-container">
 
-<div class="cards-container">
+        <div class="card">
 
-<div class="card">
+            <h3>Total Employees</h3>
 
-<h3>Total Employees</h3>
+            <h1 id="employee-total-count">
+                0
+            </h1>
 
-<h1>0</h1>
+        </div>
 
-</div>
 
+        <div class="card">
 
-<div class="card">
+            <h3>Active Employees</h3>
 
-<h3>Active Employees</h3>
+            <h1 id="employee-active-count">
+                0
+            </h1>
 
-<h1>0</h1>
+        </div>
 
-</div>
 
+        <div class="card">
 
-<div class="card">
+            <h3>On Leave</h3>
 
-<h3>On Leave</h3>
+            <h1 id="employee-leave-count">
+                0
+            </h1>
 
-<h1>0</h1>
+        </div>
 
-</div>
 
+        <div class="card">
 
-<div class="card">
+            <h3>Departments</h3>
 
-<h3>Departments</h3>
+            <h1 id="employee-department-count">
+                0
+            </h1>
 
-<h1>0</h1>
+        </div>
 
-</div>
+    </div>
 
-</div>
 
+    <!-- QUICK ACTIONS -->
 
+    <div class="quick-actions">
 
+        <h2>Quick Actions</h2>
 
-<!-- QUICK ACTIONS -->
+        <div class="action-buttons">
 
-<div class="quick-actions">
+            <button id="add-employee-btn">
+                Add Employee
+            </button>
 
-<h2>Quick Actions</h2>
 
-<div class="action-buttons">
+            <button id="view-employees-btn">
+                View Employees
+            </button>
 
-<button id="add-employee-btn">
 
-Add Employee
+            <button id="search-employee-btn">
+                Search Employee
+            </button>
 
-</button>
 
+            <button id="generate-report-btn">
+                Generate Reports
+            </button>
 
-<button id="view-employees-btn">
 
-View Employees
+            <button id="assign-role-btn">
+                Assign Roles
+            </button>
 
-</button>
 
+            <button id="leave-request-btn">
+                Leave Requests
+            </button>
 
-<button id="search-employee-btn">
+        </div>
 
-Search Employee
+    </div>
 
-</button>
 
+    <!-- EMPLOYEE DIRECTORY PREVIEW -->
 
-<button id="generate-report-btn">
+    <div class="recent-activities">
 
-Generate Reports
+        <h2>Employee Directory Preview</h2>
 
-</button>
+        <ul>
 
+            <li>
+                No employees found.
+            </li>
 
-<button id="assign-role-btn">
+        </ul>
 
-Assign Roles
+    </div>
 
-</button>
 
+    <!-- RECENT ACTIVITIES -->
 
-<button id="leave-request-btn">
+    <div class="recent-activities">
 
-Leave Requests
+        <h2>Recent Employee Activities</h2>
 
-</button>
+        <ul>
 
-</div>
+            <li>
+                No recent employee activities found.
+            </li>
 
-</div>
+        </ul>
 
+    </div>
 
 
+    <!-- PENDING REQUESTS -->
 
-<!-- EMPLOYEE DIRECTORY PREVIEW -->
+    <div class="recent-activities">
 
-<div class="recent-activities">
+        <h2>Pending Requests</h2>
 
-<h2>Employee Directory Preview</h2>
+        <ul>
 
-<ul>
+            <li>
+                Teacher Registration Requests - 0
+            </li>
 
-<li>No employees found.</li>
+            <li>
+                Leave Requests - 0
+            </li>
 
-</ul>
+            <li>
+                Role Change Requests - 0
+            </li>
 
-</div>
+        </ul>
 
+    </div>
 
+    `;
 
 
-<!-- RECENT ACTIVITIES -->
+    setTimeout(() => {
 
-<div class="recent-activities">
+        initializeEmployeeManagement();
 
-<h2>Recent Employee Activities</h2>
+        loadEmployeeStatistics();
 
-<ul>
+    }, 100);
 
-<li>No recent employee activities found.</li>
+}
 
-</ul>
 
-</div>
+/**********************************************************************
+ * INITIALIZE EMPLOYEE MANAGEMENT
+ **********************************************************************/
 
+function initializeEmployeeManagement() {
 
 
+    const addEmployee =
+        document.getElementById(
+            "add-employee-btn"
+        );
 
-<!-- PENDING REQUESTS -->
 
-<div class="recent-activities">
+    const viewEmployees =
+        document.getElementById(
+            "view-employees-btn"
+        );
 
-<h2>Pending Requests</h2>
 
-<ul>
+    const searchEmployee =
+        document.getElementById(
+            "search-employee-btn"
+        );
 
-<li>Teacher Registration Requests - 0</li>
 
-<li>Leave Requests - 0</li>
+    const generateReport =
+        document.getElementById(
+            "generate-report-btn"
+        );
 
-<li>Role Change Requests - 0</li>
 
-</ul>
+    const assignRole =
+        document.getElementById(
+            "assign-role-btn"
+        );
 
-</div>
 
-`;
+    const leaveRequest =
+        document.getElementById(
+            "leave-request-btn"
+        );
 
 
+    /*
+     * ADD EMPLOYEE
+     */
 
-/* INITIALIZE BUTTONS */
+    if (addEmployee) {
 
-setTimeout(() => {
+        addEmployee.addEventListener(
+            "click",
+            () => {
 
-initializeEmployeeManagement();
+                openModal(
 
-},100);
+                    "Add Employee",
 
-}
+                    `
 
-function initializeEmployeeManagement(){
+                    <div class="modal-form">
 
+                        <input
+                            type="text"
+                            id="employee-id"
+                            placeholder="Employee ID"
+                        >
 
-const addEmployee =
-document.getElementById("add-employee-btn");
 
+                        <input
+                            type="text"
+                            id="employee-name"
+                            placeholder="Full Name"
+                        >
 
-const viewEmployees =
-document.getElementById("view-employees-btn");
 
+                        <input
+                            type="email"
+                            id="employee-email"
+                            placeholder="Email Address"
+                        >
 
-const searchEmployee =
-document.getElementById("search-employee-btn");
 
+                        <input
+                            type="text"
+                            id="employee-phone"
+                            placeholder="Phone Number"
+                        >
 
-const generateReport =
-document.getElementById("generate-report-btn");
 
+                        <select id="employee-gender">
 
-const assignRole =
-document.getElementById("assign-role-btn");
+                            <option>
+                                Male
+                            </option>
 
+                            <option>
+                                Female
+                            </option>
 
-const leaveRequest =
-document.getElementById("leave-request-btn");
+                            <option>
+                                Other
+                            </option>
 
+                        </select>
 
 
-if(addEmployee){
+                        <input
+                            type="date"
+                            id="employee-dob"
+                        >
 
-addEmployee.addEventListener("click",()=>{
 
-openModal(
+                        <input
+                            type="text"
+                            id="employee-address"
+                            placeholder="Address"
+                        >
 
-"Add Employee",
 
-`
+                        <select id="employee-role">
 
-<div class="modal-form">
+                            <option>
+                                Teacher
+                            </option>
 
-<input
-type="text"
-id="employee-id"
-placeholder="Employee ID">
+                            <option>
+                                Principal
+                            </option>
 
+                            <option>
+                                Finance Officer
+                            </option>
 
-<input
-type="text"
-id="employee-name"
-placeholder="Full Name">
+                            <option>
+                                Admission Officer
+                            </option>
 
+                            <option>
+                                Management Officer
+                            </option>
 
-<input
-type="email"
-id="employee-email"
-placeholder="Email Address">
+                            <option>
+                                Transport Officer
+                            </option>
 
+                        </select>
 
-<input
-type="text"
-id="employee-phone"
-placeholder="Phone Number">
 
+                        <select id="employee-department">
 
-<select id="employee-gender">
+                            <option>
+                                Teaching Department
+                            </option>
 
-<option>Male</option>
-<option>Female</option>
-<option>Other</option>
+                            <option>
+                                Principal Office
+                            </option>
 
-</select>
+                            <option>
+                                Finance Department
+                            </option>
 
+                            <option>
+                                Admission Department
+                            </option>
 
-<input
-type="date"
-id="employee-dob">
+                            <option>
+                                Management Department
+                            </option>
 
+                            <option>
+                                Transport Department
+                            </option>
 
-<input
-type="text"
-id="employee-address"
-placeholder="Address">
+                        </select>
 
 
-<select id="employee-role">
+                        <input
+                            type="text"
+                            id="employee-designation"
+                            placeholder="Designation"
+                        >
 
-<option>Teacher</option>
-<option>Principal</option>
-<option>Finance Officer</option>
-<option>Admission Officer</option>
-<option>Management Officer</option>
-<option>Transport Officer</option>
 
-</select>
+                        <input
+                            type="date"
+                            id="employee-joining-date"
+                        >
 
 
-<select id="employee-department">
+                        <input
+                            type="text"
+                            id="employee-qualification"
+                            placeholder="Qualification"
+                        >
 
-<option>Teaching Department</option>
-<option>Principal Office</option>
-<option>Finance Department</option>
-<option>Admission Department</option>
-<option>Management Department</option>
-<option>Transport Department</option>
 
-</select>
+                        <input
+                            type="number"
+                            id="employee-salary"
+                            placeholder="Salary"
+                        >
 
+                    </div>
 
-<input
-type="text"
-id="employee-designation"
-placeholder="Designation">
 
+                    <button
+                        id="create-employee-button"
+                        class="modal-submit"
+                    >
 
-<input
-type="date"
-id="employee-joining-date">
+                        Create Employee
 
+                    </button>
 
-<input
-type="text"
-id="employee-qualification"
-placeholder="Qualification">
+                    `
 
+                );
 
-<input
-type="number"
-id="employee-salary"
-placeholder="Salary">
 
+                setTimeout(() => {
 
-</div>
+                    const createButton =
+                        document.getElementById(
+                            "create-employee-button"
+                        );
 
 
+                    if (createButton) {
 
-<button
-id="create-employee-button"
-class="modal-submit">
+                        createButton.addEventListener(
+                            "click",
+                            createEmployeeFunction
+                        );
 
-Create Employee
+                    }
 
-</button>
+                }, 50);
 
-`
+            }
 
-);
+        );
 
+    }
 
-setTimeout(()=>{
 
-document
-.getElementById("create-employee-button")
-.addEventListener(
-"click",
-createEmployeeFunction
-);
+    /*
+     * VIEW EMPLOYEES
+     */
 
-},50);
+    if (viewEmployees) {
 
+        viewEmployees.addEventListener(
+            "click",
+            () => {
 
-});
+                loadAllEmployees();
 
-}
+            }
+        );
 
-async function createEmployeeFunction(){
+    }
 
 
-const employeeID =
-document.getElementById("employee-id").value;
+    /*
+     * SEARCH EMPLOYEE
+     */
 
+    if (searchEmployee) {
 
-const name =
-document.getElementById("employee-name").value;
+        searchEmployee.addEventListener(
+            "click",
+            () => {
 
+                openSearchEmployeeModal();
 
-const email =
-document.getElementById("employee-email").value;
+            }
+        );
 
+    }
 
-const phone =
-document.getElementById("employee-phone").value;
 
+    /*
+     * GENERATE REPORT
+     */
 
-const gender =
-document.getElementById("employee-gender").value;
+    if (generateReport) {
 
+        generateReport.addEventListener(
+            "click",
+            () => {
 
-const dob =
-document.getElementById("employee-dob").value;
+                openEmployeeReportModal();
 
+            }
+        );
 
-const address =
-document.getElementById("employee-address").value;
+    }
 
 
-const role =
-document.getElementById("employee-role").value;
+    /*
+     * ASSIGN ROLE
+     */
 
+    if (assignRole) {
 
-const department =
-document.getElementById("employee-department").value;
+        assignRole.addEventListener(
+            "click",
+            () => {
 
+                openAssignRoleModal();
 
-const designation =
-document.getElementById("employee-designation").value;
+            }
+        );
 
+    }
 
-const joiningDate =
-document.getElementById("employee-joining-date").value;
 
+    /*
+     * LEAVE REQUESTS
+     */
 
-const qualification =
-document.getElementById("employee-qualification").value;
+    if (leaveRequest) {
 
+        leaveRequest.addEventListener(
+            "click",
+            () => {
 
-const salary =
-document.getElementById("employee-salary").value;
+                openLeaveRequests();
 
+            }
+        );
 
+    }
 
-if(
+}
 
-!employeeID ||
-!name ||
-!email ||
-!phone ||
-!dob ||
-!address ||
-!designation ||
-!joiningDate ||
-!qualification ||
-!salary
 
-){
+/**********************************************************************
+ * CREATE EMPLOYEE
+ **********************************************************************/
 
-alert("Please fill all fields.");
+async function createEmployeeFunction() {
 
-return;
 
-}
+    const employeeID =
+        document.getElementById(
+            "employee-id"
+        ).value.trim();
 
 
+    const name =
+        document.getElementById(
+            "employee-name"
+        ).value.trim();
 
-try{
 
+    const email =
+        document.getElementById(
+            "employee-email"
+        ).value.trim();
 
-await addDoc(
 
-collection(db,"employees"),
+    const phone =
+        document.getElementById(
+            "employee-phone"
+        ).value.trim();
 
-{
 
-EmployeeID : employeeID,
+    const gender =
+        document.getElementById(
+            "employee-gender"
+        ).value;
 
-Name : name,
 
-Email : email,
+    const dob =
+        document.getElementById(
+            "employee-dob"
+        ).value;
 
-Phone : phone,
 
-Gender : gender,
+    const address =
+        document.getElementById(
+            "employee-address"
+        ).value.trim();
 
-DOB : dob,
 
-Address : address,
+    const role =
+        document.getElementById(
+            "employee-role"
+        ).value;
 
-Role : role,
 
-Department : department,
+    const department =
+        document.getElementById(
+            "employee-department"
+        ).value;
 
-Designation : designation,
 
-JoiningDate : joiningDate,
+    const designation =
+        document.getElementById(
+            "employee-designation"
+        ).value.trim();
 
-Qualification : qualification,
 
-Salary : salary,
+    const joiningDate =
+        document.getElementById(
+            "employee-joining-date"
+        ).value;
 
-Status : "Active",
 
-CreatedAt : serverTimestamp()
+    const qualification =
+        document.getElementById(
+            "employee-qualification"
+        ).value.trim();
 
-}
 
-);
+    const salary =
+        document.getElementById(
+            "employee-salary"
+        ).value.trim();
 
 
+    /*
+     * VALIDATION
+     */
 
-alert("Employee Added Successfully.");
+    if (
 
+        !employeeID ||
+        !name ||
+        !email ||
+        !phone ||
+        !dob ||
+        !address ||
+        !role ||
+        !department ||
+        !designation ||
+        !joiningDate ||
+        !qualification ||
+        !salary
 
-closeModalFunction();
+    ) {
 
+        alert(
+            "Please fill all fields."
+        );
 
-loadEmployeeManagement();
+        return;
 
+    }
 
 
-}
+    try {
 
-catch(error){
 
-console.log(error);
+        await addDoc(
 
-alert(error.message);
+            collection(
+                db,
+                "employees"
+            ),
 
-}
+            {
 
+                EmployeeID:
+                    employeeID,
 
-}
+                Name:
+                    name,
 
+                Email:
+                    email,
 
+                Phone:
+                    phone,
 
-if(viewEmployees){
+                Gender:
+                    gender,
 
-viewEmployees.addEventListener("click",()=>{
+                DOB:
+                    dob,
 
-loadAllEmployees();
+                Address:
+                    address,
 
-});
+                Role:
+                    role,
 
-}
+                Department:
+                    department,
 
-async function loadAllEmployees(){
+                Designation:
+                    designation,
 
+                JoiningDate:
+                    joiningDate,
 
-try{
+                Qualification:
+                    qualification,
 
+                Salary:
+                    salary,
 
-const querySnapshot = await getDocs(
+                Status:
+                    "Active",
 
-collection(
-db,
-"employees"
-)
+                CreatedAt:
+                    serverTimestamp()
 
-);
+            }
 
+        );
 
-let employeeHTML =
 
-`
+        alert(
+            "Employee Added Successfully."
+        );
 
-<div class="recent-activities">
 
-<h2>Employee Directory</h2>
+        closeModalFunction();
 
-<table
-style="width:100%; border-collapse:collapse;">
 
-<thead>
+        loadEmployeeManagement();
 
-<tr>
 
-<th>Employee ID</th>
+    }
 
-<th>Name</th>
+    catch (error) {
 
-<th>Role</th>
+        console.log(error);
 
-<th>Department</th>
+        alert(
+            error.message
+        );
 
-<th>Status</th>
+    }
 
-<th>Actions</th>
+}
 
-</tr>
 
-</thead>
+/**********************************************************************
+ * EMPLOYEE STATISTICS
+ **********************************************************************/
 
-<tbody>
+async function loadEmployeeStatistics() {
 
-`;
+    try {
 
 
-if(querySnapshot.empty){
+        const querySnapshot =
+            await getDocs(
 
-employeeHTML +=
+                collection(
+                    db,
+                    "employees"
+                )
 
-`
+            );
 
-<tr>
 
-<td colspan="5">
+        let totalEmployees =
+            querySnapshot.size;
 
-No Employees Found.
 
-</td>
+        let activeEmployees =
+            0;
 
-</tr>
 
-`;
+        let onLeaveEmployees =
+            0;
 
-}
 
+        const departments =
+            new Set();
 
-querySnapshot.forEach((doc)=>{
 
+        querySnapshot.forEach(
+            (employeeDoc) => {
 
-const employee = doc.data();
+                const employee =
+                    employeeDoc.data();
 
 
-employeeHTML +=
+                if (
+                    employee.Status ===
+                    "Active"
+                ) {
 
-`
+                    activeEmployees++;
 
-<tr>
+                }
 
-<td>${employee.EmployeeID}</td>
 
-<td>${employee.Name}</td>
+                if (
+                    employee.Status ===
+                    "On Leave"
+                ) {
 
-<td>${employee.Role}</td>
+                    onLeaveEmployees++;
 
-<td>${employee.Department}</td>
+                }
 
-<td>${employee.Status}</td>
 
-<td>
+                if (
+                    employee.Department
+                ) {
 
-<button
-onclick="editEmployee('${doc.id}')">
+                    departments.add(
+                        employee.Department
+                    );
 
-Edit
+                }
 
-</button>
+            }
+        );
 
 
-<button
-onclick="deleteEmployee('${doc.id}')">
+        const totalElement =
+            document.getElementById(
+                "employee-total-count"
+            );
 
-Delete
 
-</button>
+        const activeElement =
+            document.getElementById(
+                "employee-active-count"
+            );
 
-</td>
 
-</tr>
+        const leaveElement =
+            document.getElementById(
+                "employee-leave-count"
+            );
 
-`;
 
+        const departmentElement =
+            document.getElementById(
+                "employee-department-count"
+            );
 
-});
 
+        if (totalElement) {
 
-employeeHTML +=
+            totalElement.textContent =
+                totalEmployees;
 
-`
+        }
 
-</tbody>
 
-</table>
+        if (activeElement) {
 
-</div>
+            activeElement.textContent =
+                activeEmployees;
 
-`;
+        }
 
 
+        if (leaveElement) {
 
-openModal(
+            leaveElement.textContent =
+                onLeaveEmployees;
 
-"View Employees",
+        }
 
-employeeHTML
 
-);
+        if (departmentElement) {
 
+            departmentElement.textContent =
+                departments.size;
 
-}
+        }
+
+    }
 
-catch(error){
+    catch (error) {
 
-console.log(error);
+        console.log(
+            "Employee statistics error:",
+            error
+        );
 
-alert(error.message);
+    }
 
 }
 
 
-}
+/**********************************************************************
+ * VIEW ALL EMPLOYEES
+ **********************************************************************/
 
+async function loadAllEmployees() {
 
+    try {
 
-if(searchEmployee){
 
-searchEmployee.addEventListener("click",()=>{
+        const querySnapshot =
+            await getDocs(
 
-openSearchEmployeeModal();
+                collection(
+                    db,
+                    "employees"
+                )
 
-});
+            );
 
-}
 
-window.editEmployee = editEmployee;
-window.deleteEmployee = deleteEmployee;
+        let employeeHTML = `
 
+            <div class="recent-activities">
 
+                <h2>
+                    Employee Directory
+                </h2>
 
-function openSearchEmployeeModal(){
 
-openModal(
+                <table
+                    style="
+                        width:100%;
+                        border-collapse:collapse;
+                    "
+                >
 
-"Search Employee",
+                    <thead>
 
-`
+                        <tr>
 
-<div class="modal-form">
+                            <th>
+                                Employee ID
+                            </th>
 
-<input
-type="text"
-id="search-employee-id"
-placeholder="Employee ID">
+                            <th>
+                                Name
+                            </th>
 
+                            <th>
+                                Role
+                            </th>
 
-<input
-type="text"
-id="search-employee-name"
-placeholder="Employee Name">
+                            <th>
+                                Department
+                            </th>
 
+                            <th>
+                                Status
+                            </th>
 
-<select id="search-employee-role">
+                            <th>
+                                Actions
+                            </th>
 
-<option value="">All Roles</option>
-<option>Teacher</option>
-<option>Principal</option>
-<option>Finance Officer</option>
-<option>Admission Officer</option>
-<option>Management Officer</option>
-<option>Transport Officer</option>
+                        </tr>
 
-</select>
+                    </thead>
 
+                    <tbody>
 
-<select id="search-employee-department">
+        `;
 
-<option value="">All Departments</option>
-<option>Teaching Department</option>
-<option>Principal Office</option>
-<option>Finance Department</option>
-<option>Admission Department</option>
-<option>Management Department</option>
-<option>Transport Department</option>
 
-</select>
+        if (
+            querySnapshot.empty
+        ) {
 
-</div>
+            employeeHTML += `
 
+                <tr>
 
-<button
-id="search-employee-button"
-class="modal-submit">
+                    <td colspan="6">
 
-Search Employee
+                        No Employees Found.
 
-</button>
+                    </td>
 
+                </tr>
 
-<div id="employee-search-results">
+            `;
 
-</div>
+        }
 
-`
 
-);
+        querySnapshot.forEach(
+            (employeeDoc) => {
 
+                const employee =
+                    employeeDoc.data();
 
 
-setTimeout(()=>{
+                employeeHTML += `
 
-document
-.getElementById("search-employee-button")
-.addEventListener(
-"click",
-searchEmployeeFunction
-);
+                    <tr>
 
-},50);
+                        <td>
+                            ${employee.EmployeeID}
+                        </td>
 
+                        <td>
+                            ${employee.Name}
+                        </td>
 
-}
-window.editEmployee = editEmployee;
+                        <td>
+                            ${employee.Role}
+                        </td>
 
-async function searchEmployeeFunction(){
+                        <td>
+                            ${employee.Department}
+                        </td>
 
+                        <td>
+                            ${employee.Status}
+                        </td>
 
-const employeeID =
-document.getElementById(
-"search-employee-id"
-).value.toLowerCase();
+                        <td>
 
+                            <button
+                                onclick="
+                                    editEmployee(
+                                        '${employeeDoc.id}'
+                                    )
+                                "
+                            >
 
-const employeeName =
-document.getElementById(
-"search-employee-name"
-).value.toLowerCase();
+                                Edit
 
+                            </button>
 
-const role =
-document.getElementById(
-"search-employee-role"
-).value;
 
+                            <button
+                                onclick="
+                                    deleteEmployee(
+                                        '${employeeDoc.id}'
+                                    )
+                                "
+                            >
 
-const department =
-document.getElementById(
-"search-employee-department"
-).value;
+                                Delete
 
+                            </button>
 
+                        </td>
 
-const resultsDiv =
-document.getElementById(
-"employee-search-results"
-);
+                    </tr>
 
+                `;
 
+            }
+        );
 
-const querySnapshot = await getDocs(
 
-collection(
-db,
-"employees"
-)
+        employeeHTML += `
 
-);
+                    </tbody>
 
+                </table>
 
+            </div>
 
-let html =
+        `;
 
-`
 
-<h3 style="margin-top:30px;">
+        openModal(
+            "View Employees",
+            employeeHTML
+        );
 
-Search Results
+    }
 
-</h3>
+    catch (error) {
 
-<table
-style="width:100%; border-collapse:collapse;">
+        console.log(error);
 
-<tr>
+        alert(
+            error.message
+        );
 
-<th>ID</th>
-<th>Name</th>
-<th>Role</th>
-<th>Department</th>
+    }
 
-</tr>
+}
 
-`;
 
+/**********************************************************************
+ * SEARCH EMPLOYEE
+ **********************************************************************/
 
+function openSearchEmployeeModal() {
 
-let found = false;
+    openModal(
 
+        "Search Employee",
 
+        `
 
-querySnapshot.forEach((doc)=>{
+        <div class="modal-form">
 
+            <input
+                type="text"
+                id="search-employee-id"
+                placeholder="Employee ID"
+            >
 
-const employee =
-doc.data();
 
+            <input
+                type="text"
+                id="search-employee-name"
+                placeholder="Employee Name"
+            >
 
 
-const idMatch =
+            <select
+                id="search-employee-role"
+            >
 
-employee.EmployeeID
-.toLowerCase()
-.includes(employeeID);
+                <option value="">
+                    All Roles
+                </option>
 
+                <option>
+                    Teacher
+                </option>
 
-const nameMatch =
+                <option>
+                    Principal
+                </option>
 
-employee.Name
-.toLowerCase()
-.includes(employeeName);
+                <option>
+                    Finance Officer
+                </option>
 
+                <option>
+                    Admission Officer
+                </option>
 
-const roleMatch =
+                <option>
+                    Management Officer
+                </option>
 
-role === "" ||
+                <option>
+                    Transport Officer
+                </option>
 
-employee.Role === role;
+            </select>
 
 
-const departmentMatch =
+            <select
+                id="search-employee-department"
+            >
 
-department === "" ||
+                <option value="">
+                    All Departments
+                </option>
 
-employee.Department === department;
+                <option>
+                    Teaching Department
+                </option>
 
+                <option>
+                    Principal Office
+                </option>
 
+                <option>
+                    Finance Department
+                </option>
 
-if(
+                <option>
+                    Admission Department
+                </option>
 
-idMatch &&
-nameMatch &&
-roleMatch &&
-departmentMatch
+                <option>
+                    Management Department
+                </option>
 
-){
+                <option>
+                    Transport Department
+                </option>
 
-found = true;
+            </select>
 
+        </div>
 
-html +=
 
-`
+        <button
+            id="search-employee-button"
+            class="modal-submit"
+        >
 
-<tr>
+            Search Employee
 
-<td>${employee.EmployeeID}</td>
+        </button>
 
-<td>${employee.Name}</td>
 
-<td>${employee.Role}</td>
+        <div
+            id="employee-search-results"
+        >
 
-<td>${employee.Department}</td>
+        </div>
 
-</tr>
+        `
 
-`;
+    );
 
 
+    setTimeout(() => {
 
-}
+        const searchButton =
+            document.getElementById(
+                "search-employee-button"
+            );
 
 
-});
+        if (searchButton) {
 
+            searchButton.addEventListener(
+                "click",
+                searchEmployeeFunction
+            );
 
+        }
 
+    }, 50);
 
-if(!found){
+}
 
-html +=
 
-`
+/**********************************************************************
+ * SEARCH EMPLOYEE FUNCTION
+ **********************************************************************/
 
-<tr>
+async function searchEmployeeFunction() {
 
-<td colspan="4">
+    try {
 
-No Employees Found.
 
-</td>
+        const employeeID =
+            document.getElementById(
+                "search-employee-id"
+            ).value
+                .trim()
+                .toLowerCase();
 
-</tr>
 
-`;
+        const employeeName =
+            document.getElementById(
+                "search-employee-name"
+            ).value
+                .trim()
+                .toLowerCase();
 
-}
 
+        const role =
+            document.getElementById(
+                "search-employee-role"
+            ).value;
 
-html += "</table>";
 
+        const department =
+            document.getElementById(
+                "search-employee-department"
+            ).value;
 
 
-resultsDiv.innerHTML = html;
+        const resultsDiv =
+            document.getElementById(
+                "employee-search-results"
+            );
 
 
-}
+        const querySnapshot =
+            await getDocs(
 
-async function editEmployee(employeeDocID){
+                collection(
+                    db,
+                    "employees"
+                )
 
-try{
+            );
 
 
-const employeeRef = doc(
+        let html = `
 
-db,
-"employees",
-employeeDocID
+            <h3
+                style="margin-top:30px;"
+            >
 
-);
+                Search Results
 
+            </h3>
 
-const employeeSnapshot =
 
-await getDoc(employeeRef);
+            <table
+                style="
+                    width:100%;
+                    border-collapse:collapse;
+                "
+            >
 
+                <thead>
 
-const employee =
+                    <tr>
 
-employeeSnapshot.data();
+                        <th>
+                            Employee ID
+                        </th>
 
+                        <th>
+                            Name
+                        </th>
 
+                        <th>
+                            Role
+                        </th>
 
-openModal(
+                        <th>
+                            Department
+                        </th>
 
-"Edit Employee",
+                    </tr>
 
-`
+                </thead>
 
-<div class="modal-form">
+                <tbody>
 
+        `;
 
-<input
-type="text"
-id="edit-name"
-value="${employee.Name}">
 
+        let found = false;
 
-<input
-type="text"
-id="edit-phone"
-value="${employee.Phone}">
 
+        querySnapshot.forEach(
+            (employeeDoc) => {
 
-<input
-type="text"
-id="edit-designation"
-value="${employee.Designation}">
+                const employee =
+                    employeeDoc.data();
 
 
-<input
-type="number"
-id="edit-salary"
-value="${employee.Salary}">
+                const idMatch =
+                    employeeID === "" ||
+                    String(
+                        employee.EmployeeID
+                    )
+                        .toLowerCase()
+                        .includes(
+                            employeeID
+                        );
 
 
-<select id="edit-status">
+                const nameMatch =
+                    employeeName === "" ||
+                    String(
+                        employee.Name
+                    )
+                        .toLowerCase()
+                        .includes(
+                            employeeName
+                        );
 
-<option>
 
-Active
+                const roleMatch =
+                    role === "" ||
+                    employee.Role === role;
 
-</option>
 
-<option>
+                const departmentMatch =
+                    department === "" ||
+                    employee.Department ===
+                    department;
 
-On Leave
 
-</option>
+                if (
 
-<option>
+                    idMatch &&
+                    nameMatch &&
+                    roleMatch &&
+                    departmentMatch
 
-Suspended
+                ) {
 
-</option>
+                    found = true;
 
-<option>
 
-Retired
+                    html += `
 
-</option>
+                        <tr>
 
-</select>
+                            <td>
+                                ${employee.EmployeeID}
+                            </td>
 
+                            <td>
+                                ${employee.Name}
+                            </td>
 
-</div>
+                            <td>
+                                ${employee.Role}
+                            </td>
 
+                            <td>
+                                ${employee.Department}
+                            </td>
 
-<button
-id="update-employee-btn"
-class="modal-submit">
+                        </tr>
 
-Update Employee
+                    `;
 
-</button>
+                }
 
-`
+            }
+        );
 
-);
 
+        if (!found) {
 
+            html += `
 
-setTimeout(()=>{
+                <tr>
 
-document
-.getElementById("update-employee-btn")
-.addEventListener(
-"click",
-()=>{
+                    <td colspan="4">
 
-updateEmployeeFunction(
-employeeDocID
-);
+                        No Employees Found.
 
-}
+                    </td>
 
-);
+                </tr>
 
-},50);
+            `;
 
+        }
 
-}
 
-catch(error){
+        html += `
 
-console.log(error);
+                </tbody>
 
-}
+            </table>
 
+        `;
 
-}
 
-async function updateEmployeeFunction(employeeDocID){
+        resultsDiv.innerHTML =
+            html;
 
+    }
 
-try{
+    catch (error) {
 
+        console.log(error);
 
-await updateDoc(
+        alert(
+            error.message
+        );
 
-doc(
-db,
-"employees",
-employeeDocID
-),
+    }
 
-{
+}
 
-Name :
 
-document.getElementById(
-"edit-name"
-).value,
+/**********************************************************************
+ * EDIT EMPLOYEE
+ **********************************************************************/
 
+async function editEmployee(
+    employeeDocID
+) {
 
-Phone :
+    try {
 
-document.getElementById(
-"edit-phone"
-).value,
 
+        const employeeRef =
+            doc(
 
-Designation :
+                db,
+                "employees",
+                employeeDocID
 
-document.getElementById(
-"edit-designation"
-).value,
+            );
 
 
-Salary :
+        const employeeSnapshot =
+            await getDoc(
+                employeeRef
+            );
 
-document.getElementById(
-"edit-salary"
-).value,
 
+        if (
+            !employeeSnapshot.exists()
+        ) {
 
-Status :
+            alert(
+                "Employee not found."
+            );
 
-document.getElementById(
-"edit-status"
-).value
+            return;
 
-}
+        }
 
-);
 
+        const employee =
+            employeeSnapshot.data();
 
-alert(
-"Employee Updated Successfully."
-);
 
+        openModal(
 
-closeModalFunction();
+            "Edit Employee",
 
+            `
 
-loadEmployeeManagement();
+            <div class="modal-form">
 
+                <input
+                    type="text"
+                    id="edit-name"
+                    value="${employee.Name || ""}"
+                    placeholder="Full Name"
+                >
 
 
-}
+                <input
+                    type="text"
+                    id="edit-phone"
+                    value="${employee.Phone || ""}"
+                    placeholder="Phone Number"
+                >
 
-catch(error){
 
-console.log(error);
+                <input
+                    type="text"
+                    id="edit-designation"
+                    value="${employee.Designation || ""}"
+                    placeholder="Designation"
+                >
 
-alert(error.message);
 
-}
+                <input
+                    type="number"
+                    id="edit-salary"
+                    value="${employee.Salary || ""}"
+                    placeholder="Salary"
+                >
 
 
-}
+                <select
+                    id="edit-status"
+                >
 
-async function deleteEmployee(employeeDocID){
+                    <option
+                        value="Active"
+                        ${
+                            employee.Status ===
+                            "Active"
+                                ? "selected"
+                                : ""
+                        }
+                    >
+                        Active
+                    </option>
 
-const confirmDelete = confirm(
 
-"Are you sure you want to delete this employee?"
+                    <option
+                        value="On Leave"
+                        ${
+                            employee.Status ===
+                            "On Leave"
+                                ? "selected"
+                                : ""
+                        }
+                    >
+                        On Leave
+                    </option>
 
-);
 
+                    <option
+                        value="Suspended"
+                        ${
+                            employee.Status ===
+                            "Suspended"
+                                ? "selected"
+                                : ""
+                        }
+                    >
+                        Suspended
+                    </option>
 
-if(!confirmDelete){
 
-return;
+                    <option
+                        value="Retired"
+                        ${
+                            employee.Status ===
+                            "Retired"
+                                ? "selected"
+                                : ""
+                        }
+                    >
+                        Retired
+                    </option>
 
-}
+                </select>
 
+            </div>
 
 
-try{
+            <button
+                id="update-employee-btn"
+                class="modal-submit"
+            >
 
+                Update Employee
 
-await deleteDoc(
+            </button>
 
-doc(
+            `
 
-db,
-"employees",
-employeeDocID
+        );
 
-)
 
-);
+        setTimeout(() => {
 
+            const updateButton =
+                document.getElementById(
+                    "update-employee-btn"
+                );
 
 
-alert(
+            if (updateButton) {
 
-"Employee Deleted Successfully."
+                updateButton.addEventListener(
+                    "click",
+                    () => {
 
-);
+                        updateEmployeeFunction(
+                            employeeDocID
+                        );
 
+                    }
+                );
 
-loadAllEmployees();
+            }
 
+        }, 50);
 
+    }
 
-}
+    catch (error) {
 
-catch(error){
+        console.log(error);
 
-console.log(error);
+        alert(
+            error.message
+        );
 
-alert(error.message);
+    }
 
 }
 
 
-}
+/**********************************************************************
+ * UPDATE EMPLOYEE
+ **********************************************************************/
 
+async function updateEmployeeFunction(
+    employeeDocID
+) {
 
+    try {
 
 
+        const name =
+            document.getElementById(
+                "edit-name"
+            ).value.trim();
 
-if(generateReport){
 
-generateReport.addEventListener("click",()=>{
+        const phone =
+            document.getElementById(
+                "edit-phone"
+            ).value.trim();
 
-openEmployeeReportModal();
 
-});
+        const designation =
+            document.getElementById(
+                "edit-designation"
+            ).value.trim();
 
-}
 
-function openEmployeeReportModal(){
+        const salary =
+            document.getElementById(
+                "edit-salary"
+            ).value.trim();
 
-openModal(
 
-"Generate Employee Reports",
+        const status =
+            document.getElementById(
+                "edit-status"
+            ).value;
 
-`
 
-<div class="modal-form">
+        if (
+            !name ||
+            !phone ||
+            !designation ||
+            !salary
+        ) {
 
-<h3>Select Report Type</h3>
+            alert(
+                "Please fill all fields."
+            );
 
-<select id="report-type">
+            return;
 
-<option>Total Employees</option>
+        }
 
-<option>Department Report</option>
 
-<option>Role Report</option>
+        await updateDoc(
 
-<option>Salary Report</option>
+            doc(
+                db,
+                "employees",
+                employeeDocID
+            ),
 
-<option>Joining Report</option>
+            {
 
-<option>Leave Report</option>
+                Name:
+                    name,
 
-</select>
+                Phone:
+                    phone,
 
+                Designation:
+                    designation,
 
-<h3>Select File Format</h3>
+                Salary:
+                    salary,
 
-<select id="report-format">
+                Status:
+                    status
 
-<option>PDF</option>
+            }
 
-<option>Excel</option>
+        );
 
-<option>Print</option>
 
-</select>
+        alert(
+            "Employee Updated Successfully."
+        );
 
 
-</div>
+        closeModalFunction();
 
 
-<button
-id="generate-employee-report-btn"
-class="modal-submit">
+        loadEmployeeManagement();
 
-Generate Report
+    }
 
-</button>
+    catch (error) {
 
-`
+        console.log(error);
 
-);
+        alert(
+            error.message
+        );
 
+    }
 
-setTimeout(()=>{
+}
 
-document
-.getElementById("generate-employee-report-btn")
-.addEventListener(
-"click",
-generateEmployeeReport
-);
 
-},50);
+/**********************************************************************
+ * DELETE EMPLOYEE
+ **********************************************************************/
 
+async function deleteEmployee(
+    employeeDocID
+) {
 
-}
+    const confirmDelete =
+        confirm(
+            "Are you sure you want to delete this employee?"
+        );
 
-async function generateEmployeeReport(){
 
+    if (!confirmDelete) {
 
-const reportType =
+        return;
 
-document.getElementById(
-"report-type"
-).value;
+    }
 
 
-const reportFormat =
+    try {
 
-document.getElementById(
-"report-format"
-).value;
 
+        await deleteDoc(
 
+            doc(
+                db,
+                "employees",
+                employeeDocID
+            )
 
-const querySnapshot = await getDocs(
+        );
 
-collection(
-db,
-"employees"
-)
 
-);
+        alert(
+            "Employee Deleted Successfully."
+        );
 
 
-const employees = [];
+        loadEmployeeStatistics();
 
 
-querySnapshot.forEach((doc)=>{
+        loadAllEmployees();
 
-employees.push(doc.data());
+    }
 
-});
+    catch (error) {
 
+        console.log(error);
 
+        alert(
+            error.message
+        );
 
-let reportText = "";
+    }
 
+}
 
 
-if(reportType === "Total Employees"){
+/**********************************************************************
+ * EMPLOYEE REPORTS
+ **********************************************************************/
 
+function openEmployeeReportModal() {
 
-reportText +=
+    openModal(
 
-"TOTAL EMPLOYEES REPORT\n\n";
+        "Generate Employee Reports",
 
+        `
 
-reportText +=
+        <div class="modal-form">
 
-`Total Employees : ${employees.length}`;
+            <h3>
+                Select Report Type
+            </h3>
 
 
-}
+            <select id="report-type">
 
+                <option>
+                    Total Employees
+                </option>
 
+                <option>
+                    Department Report
+                </option>
 
+                <option>
+                    Role Report
+                </option>
 
-if(reportType === "Department Report"){
+                <option>
+                    Salary Report
+                </option>
 
+                <option>
+                    Joining Report
+                </option>
 
-const departments = {};
+                <option>
+                    Leave Report
+                </option>
 
+            </select>
 
-employees.forEach((employee)=>{
 
+            <h3>
+                Select File Format
+            </h3>
 
-const department = employee.Department;
 
+            <select id="report-format">
 
-if(!departments[department]){
+                <option>
+                    PDF
+                </option>
 
-departments[department] = 0;
+                <option>
+                    Excel
+                </option>
 
-}
+                <option>
+                    Print
+                </option>
 
+            </select>
 
-departments[department]++;
+        </div>
 
 
-});
+        <button
+            id="generate-employee-report-btn"
+            class="modal-submit"
+        >
 
+            Generate Report
 
-reportText +=
+        </button>
 
-"DEPARTMENT REPORT\n\n";
+        `
 
+    );
 
-for(const department in departments){
 
-reportText +=
+    setTimeout(() => {
 
-`${department} : ${departments[department]}\n`;
+        const reportButton =
+            document.getElementById(
+                "generate-employee-report-btn"
+            );
 
-}
 
+        if (reportButton) {
 
+            reportButton.addEventListener(
+                "click",
+                generateEmployeeReport
+            );
+
+        }
+
+    }, 50);
+
 }
 
 
+/**********************************************************************
+ * GENERATE EMPLOYEE REPORT
+ **********************************************************************/
 
+async function generateEmployeeReport() {
 
-if(reportType === "Role Report"){
+    try {
 
 
-const roles = {};
+        const reportType =
+            document.getElementById(
+                "report-type"
+            ).value;
 
 
-employees.forEach((employee)=>{
+        const reportFormat =
+            document.getElementById(
+                "report-format"
+            ).value;
 
 
-const role = employee.Role;
+        const querySnapshot =
+            await getDocs(
 
+                collection(
+                    db,
+                    "employees"
+                )
 
-if(!roles[role]){
+            );
 
-roles[role] = 0;
 
-}
+        const employees = [];
 
 
-roles[role]++;
+        querySnapshot.forEach(
+            (employeeDoc) => {
 
+                employees.push(
+                    employeeDoc.data()
+                );
 
-});
+            }
+        );
 
 
-reportText +=
+        let reportText = "";
 
-"ROLE REPORT\n\n";
 
+        /*
+         * TOTAL EMPLOYEES
+         */
 
-for(const role in roles){
+        if (
+            reportType ===
+            "Total Employees"
+        ) {
 
-reportText +=
+            reportText +=
+                "TOTAL EMPLOYEES REPORT\n\n";
 
-`${role} : ${roles[role]}\n`;
 
-}
+            reportText +=
+                `Total Employees : ${employees.length}`;
 
+        }
 
-}
 
+        /*
+         * DEPARTMENT REPORT
+         */
 
+        if (
+            reportType ===
+            "Department Report"
+        ) {
 
+            const departments = {};
 
-if(reportType === "Salary Report"){
 
+            employees.forEach(
+                (employee) => {
 
-let totalSalary = 0;
+                    const department =
+                        employee.Department;
 
 
-employees.forEach((employee)=>{
+                    if (
+                        !departments[
+                            department
+                        ]
+                    ) {
 
-totalSalary += Number(employee.Salary);
+                        departments[
+                            department
+                        ] = 0;
 
-});
+                    }
 
 
-reportText +=
+                    departments[
+                        department
+                    ]++;
 
-"SALARY REPORT\n\n";
+                }
+            );
 
 
-reportText +=
+            reportText +=
+                "DEPARTMENT REPORT\n\n";
 
-`Monthly Salary Liability : ₹${totalSalary}`;
 
+            for (
+                const department
+                in departments
+            ) {
 
-}
+                reportText +=
+                    `${department} : ${departments[department]}\n`;
 
+            }
 
+        }
 
 
-if(reportType === "Joining Report"){
+        /*
+         * ROLE REPORT
+         */
 
+        if (
+            reportType ===
+            "Role Report"
+        ) {
 
-reportText +=
+            const roles = {};
 
-"JOINING REPORT\n\n";
 
+            employees.forEach(
+                (employee) => {
 
-employees.forEach((employee)=>{
+                    const role =
+                        employee.Role;
 
-reportText +=
 
-`${employee.Name} - ${employee.JoiningDate}\n`;
+                    if (
+                        !roles[role]
+                    ) {
 
-});
+                        roles[role] = 0;
 
+                    }
 
-}
 
+                    roles[role]++;
 
+                }
+            );
 
 
-if(reportType === "Leave Report"){
+            reportText +=
+                "ROLE REPORT\n\n";
 
 
-let leaveCount = 0;
+            for (
+                const role
+                in roles
+            ) {
 
+                reportText +=
+                    `${role} : ${roles[role]}\n`;
 
-employees.forEach((employee)=>{
+            }
 
+        }
 
-if(employee.Status === "On Leave"){
 
-leaveCount++;
+        /*
+         * SALARY REPORT
+         */
 
-}
+        if (
+            reportType ===
+            "Salary Report"
+        ) {
 
+            let totalSalary = 0;
 
-});
 
+            employees.forEach(
+                (employee) => {
 
-reportText +=
+                    totalSalary +=
+                        Number(
+                            employee.Salary
+                        );
 
-"LEAVE REPORT\n\n";
+                }
+            );
 
 
-reportText +=
+            reportText +=
+                "SALARY REPORT\n\n";
 
-`Employees On Leave : ${leaveCount}`;
 
+            reportText +=
+                `Monthly Salary Liability : ₹${totalSalary}`;
 
-}
+        }
 
 
+        /*
+         * JOINING REPORT
+         */
 
+        if (
+            reportType ===
+            "Joining Report"
+        ) {
 
-// PDF OPTION
+            reportText +=
+                "JOINING REPORT\n\n";
 
 
-if(reportFormat === "PDF"){
+            employees.forEach(
+                (employee) => {
 
-downloadTextFile(
+                    reportText +=
+                        `${employee.Name} - ${employee.JoiningDate}\n`;
 
-reportText,
+                }
+            );
 
-"EmployeeReport.pdf"
+        }
 
-);
 
-}
+        /*
+         * LEAVE REPORT
+         */
 
+        if (
+            reportType ===
+            "Leave Report"
+        ) {
 
+            let leaveCount = 0;
 
-// EXCEL OPTION
 
+            employees.forEach(
+                (employee) => {
 
-if(reportFormat === "Excel"){
+                    if (
+                        employee.Status ===
+                        "On Leave"
+                    ) {
 
-downloadTextFile(
+                        leaveCount++;
 
-reportText,
+                    }
 
-"EmployeeReport.xls"
+                }
+            );
 
-);
 
-}
+            reportText +=
+                "LEAVE REPORT\n\n";
 
 
+            reportText +=
+                `Employees On Leave : ${leaveCount}`;
 
-// PRINT OPTION
+        }
 
 
-if(reportFormat === "Print"){
+        /*
+         * PDF
+         */
 
-const printWindow =
+        if (
+            reportFormat ===
+            "PDF"
+        ) {
 
-window.open("");
+            downloadTextFile(
+                reportText,
+                "EmployeeReport.pdf"
+            );
 
+        }
 
-printWindow.document.write(
 
-`<pre>${reportText}</pre>`
+        /*
+         * EXCEL
+         */
 
-);
+        if (
+            reportFormat ===
+            "Excel"
+        ) {
 
+            downloadTextFile(
+                reportText,
+                "EmployeeReport.xls"
+            );
 
-printWindow.print();
+        }
 
-}
 
+        /*
+         * PRINT
+         */
 
-}
+        if (
+            reportFormat ===
+            "Print"
+        ) {
+
+            const printWindow =
+                window.open("");
+
+
+            if (!printWindow) {
+
+                alert(
+                    "Please allow pop-ups to print the report."
+                );
+
+                return;
+
+            }
+
+
+            printWindow.document.write(
+                `<pre>${reportText}</pre>`
+            );
+
+
+            printWindow.document.close();
+
 
+            printWindow.print();
 
+        }
 
-if(assignRole){
+    }
 
-assignRole.addEventListener("click",()=>{
+    catch (error) {
 
-openAssignRoleModal();
+        console.log(error);
 
-});
+        alert(
+            error.message
+        );
 
+    }
+
 }
+
+
+/**********************************************************************
+ * ASSIGN EMPLOYEE ROLE
+ **********************************************************************/
+
+function openAssignRoleModal() {
 
-function openAssignRoleModal(){
+    openModal(
 
-openModal(
+        "Assign Employee Roles",
 
-"Assign Employee Roles",
+        `
 
-`
+        <div class="modal-form">
 
-<div class="modal-form">
+            <input
+                type="text"
+                id="role-employee-id"
+                placeholder="Employee ID"
+            >
 
-<input
-type="text"
-id="role-employee-id"
-placeholder="Employee ID">
 
+            <select id="new-role">
 
-<select id="new-role">
+                <option>
+                    Teacher
+                </option>
 
-<option>Teacher</option>
+                <option>
+                    Principal
+                </option>
 
-<option>Principal</option>
+                <option>
+                    Finance Officer
+                </option>
 
-<option>Finance Officer</option>
+                <option>
+                    Admission Officer
+                </option>
 
-<option>Admission Officer</option>
+                <option>
+                    Management Officer
+                </option>
 
-<option>Management Officer</option>
+                <option>
+                    Transport Officer
+                </option>
 
-<option>Transport Officer</option>
+                <option>
+                    Admin
+                </option>
 
-<option>Admin</option>
+            </select>
 
-</select>
+        </div>
 
-</div>
 
+        <button
+            id="assign-role-button"
+            class="modal-submit"
+        >
 
-<button
-id="assign-role-button"
-class="modal-submit">
+            Assign Role
 
-Assign Role
+        </button>
 
-</button>
+        `
 
-`
+    );
 
-);
 
+    setTimeout(() => {
 
+        const assignButton =
+            document.getElementById(
+                "assign-role-button"
+            );
 
-setTimeout(()=>{
 
-document
-.getElementById("assign-role-button")
-.addEventListener(
-"click",
-assignEmployeeRole
-);
+        if (assignButton) {
 
-},50);
+            assignButton.addEventListener(
+                "click",
+                assignEmployeeRole
+            );
 
+        }
 
+    }, 50);
+
 }
 
-async function assignEmployeeRole(){
 
+/**********************************************************************
+ * ASSIGN EMPLOYEE ROLE FUNCTION
+ **********************************************************************/
 
-const employeeID =
+async function assignEmployeeRole() {
 
-document.getElementById(
-"role-employee-id"
-).value;
+    try {
 
 
-const newRole =
+        const employeeID =
+            document.getElementById(
+                "role-employee-id"
+            ).value
+                .trim();
 
-document.getElementById(
-"new-role"
-).value;
 
+        const newRole =
+            document.getElementById(
+                "new-role"
+            ).value;
 
 
-const querySnapshot = await getDocs(
+        if (!employeeID) {
 
-collection(
-db,
-"employees"
-)
+            alert(
+                "Please enter Employee ID."
+            );
 
-);
+            return;
 
+        }
 
-let found = false;
 
+        const querySnapshot =
+            await getDocs(
 
-for(const employeeDoc of querySnapshot.docs){
+                collection(
+                    db,
+                    "employees"
+                )
 
+            );
 
-const employee = employeeDoc.data();
 
+        let found = false;
 
-if(employee.EmployeeID === employeeID){
 
+        for (
+            const employeeDoc
+            of querySnapshot.docs
+        ) {
 
-await updateDoc(
+            const employee =
+                employeeDoc.data();
 
-doc(
-db,
-"employees",
-employeeDoc.id
-),
 
-{
+            if (
+                String(
+                    employee.EmployeeID
+                ).trim() ===
+                employeeID
+            ) {
 
-Role : newRole
 
-}
+                await updateDoc(
 
-);
+                    doc(
+                        db,
+                        "employees",
+                        employeeDoc.id
+                    ),
 
+                    {
 
-found = true;
+                        Role:
+                            newRole
 
-break;
+                    }
 
+                );
 
-}
 
+                found = true;
 
-}
+                break;
 
+            }
 
+        }
 
-if(found){
 
-alert(
+        if (found) {
 
-"Employee Role Updated Successfully."
+            alert(
+                "Employee Role Updated Successfully."
+            );
 
-);
 
-closeModalFunction();
+            closeModalFunction();
 
-}
 
-else{
+            loadEmployeeManagement();
 
-alert(
+        }
 
-"Employee Not Found."
+        else {
 
-);
+            alert(
+                "Employee Not Found."
+            );
 
-}
+        }
+
+    }
+
+    catch (error) {
 
+        console.log(error);
 
+        alert(
+            error.message
+        );
+
+    }
+
 }
 
 
+/**********************************************************************
+ * LEAVE REQUESTS
+ **********************************************************************/
 
-if(leaveRequest){
+function openLeaveRequests() {
 
-leaveRequest.addEventListener("click",()=>{
+    openModal(
 
-openLeaveRequests();
+        "Employee Leave Requests",
 
-});
+        `
 
-}
+        <div class="modal-form">
+
+            <button
+                id="view-pending-leaves"
+                class="modal-submit"
+            >
 
-function openLeaveRequests(){
+                View Pending Requests
 
-openModal(
+            </button>
 
-"Employee Leave Requests",
 
-`
+            <button
+                id="view-approved-leaves"
+                class="modal-submit"
+            >
 
-<div class="modal-form">
+                Approved Requests
 
-<button
-id="view-pending-leaves"
-class="modal-submit">
+            </button>
 
-View Pending Requests
 
-</button>
+            <button
+                id="view-rejected-leaves"
+                class="modal-submit"
+            >
 
+                Rejected Requests
 
-<button
-id="view-approved-leaves"
-class="modal-submit">
+            </button>
 
-Approved Requests
+        </div>
 
-</button>
 
+        <div id="leave-request-results">
 
-<button
-id="view-rejected-leaves"
-class="modal-submit">
+        </div>
 
-Rejected Requests
+        `
 
-</button>
+    );
 
 
-</div>
+    setTimeout(() => {
 
+        const pendingButton =
+            document.getElementById(
+                "view-pending-leaves"
+            );
 
-<div id="leave-request-results">
 
-</div>
+        const approvedButton =
+            document.getElementById(
+                "view-approved-leaves"
+            );
 
-`
 
-);
+        const rejectedButton =
+            document.getElementById(
+                "view-rejected-leaves"
+            );
 
 
+        if (pendingButton) {
 
-setTimeout(()=>{
+            pendingButton.addEventListener(
+                "click",
+                loadPendingLeaves
+            );
 
-document
-.getElementById("view-pending-leaves")
-.addEventListener(
-"click",
-loadPendingLeaves
-);
+        }
 
 
-document
-.getElementById("view-approved-leaves")
-.addEventListener(
-"click",
-loadApprovedLeaves
-);
+        if (approvedButton) {
 
+            approvedButton.addEventListener(
+                "click",
+                loadApprovedLeaves
+            );
 
-document
-.getElementById("view-rejected-leaves")
-.addEventListener(
-"click",
-loadRejectedLeaves
-);
+        }
 
 
-},50);
+        if (rejectedButton) {
 
+            rejectedButton.addEventListener(
+                "click",
+                loadRejectedLeaves
+            );
 
+        }
+
+    }, 50);
+
 }
+
+
+/**********************************************************************
+ * LOAD PENDING LEAVES
+ **********************************************************************/
 
-async function loadPendingLeaves(){
+async function loadPendingLeaves() {
 
-loadLeaveRequests("Pending");
+    loadLeaveRequests(
+        "Pending"
+    );
 
 }
 
 
-async function loadApprovedLeaves(){
+/**********************************************************************
+ * LOAD APPROVED LEAVES
+ **********************************************************************/
 
-loadLeaveRequests("Approved");
+async function loadApprovedLeaves() {
 
+    loadLeaveRequests(
+        "Approved"
+    );
+
 }
+
 
+/**********************************************************************
+ * LOAD REJECTED LEAVES
+ **********************************************************************/
 
-async function loadRejectedLeaves(){
+async function loadRejectedLeaves() {
 
-loadLeaveRequests("Rejected");
+    loadLeaveRequests(
+        "Rejected"
+    );
 
 }
 
-async function loadLeaveRequests(status){
 
+/**********************************************************************
+ * LOAD LEAVE REQUESTS
+ **********************************************************************/
 
-const resultsDiv =
+async function loadLeaveRequests(
+    status
+) {
 
-document.getElementById(
-"leave-request-results"
-);
+    try {
 
 
-const q = query(
+        const resultsDiv =
+            document.getElementById(
+                "leave-request-results"
+            );
 
-collection(
-db,
-"employeeLeaveRequests"
-),
 
-where(
-"Status",
-"==",
-status
-)
+        const q =
+            query(
 
-);
+                collection(
+                    db,
+                    "employeeLeaveRequests"
+                ),
 
+                where(
+                    "Status",
+                    "==",
+                    status
+                )
 
-const querySnapshot =
+            );
 
-await getDocs(q);
 
+        const querySnapshot =
+            await getDocs(q);
 
-let html =
 
-`
+        let html = `
 
-<h3>${status} Leave Requests</h3>
+            <h3>
+                ${status} Leave Requests
+            </h3>
 
-<table style="width:100%;">
 
-<tr>
+            <table
+                style="width:100%;"
+            >
 
-<th>Name</th>
-<th>Employee ID</th>
-<th>Leave Type</th>
-<th>Days</th>
-<th>Action</th>
+                <thead>
 
-</tr>
+                    <tr>
 
-`;
+                        <th>
+                            Name
+                        </th>
 
+                        <th>
+                            Employee ID
+                        </th>
 
-if(querySnapshot.empty){
+                        <th>
+                            Leave Type
+                        </th>
 
-html +=
+                        <th>
+                            Days
+                        </th>
 
-`
+                        <th>
+                            Action
+                        </th>
 
-<tr>
+                    </tr>
 
-<td colspan="5">
+                </thead>
 
-No Leave Requests Found.
+                <tbody>
 
-</td>
+        `;
 
-</tr>
 
-`;
+        if (
+            querySnapshot.empty
+        ) {
 
-}
+            html += `
 
+                <tr>
 
-querySnapshot.forEach((leaveDoc)=>{
+                    <td colspan="5">
 
+                        No Leave Requests Found.
 
-const leave = leaveDoc.data();
+                    </td>
 
+                </tr>
 
-html +=
+            `;
 
-`
+        }
 
-<tr>
 
-<td>${leave.Name}</td>
+        querySnapshot.forEach(
+            (leaveDoc) => {
 
-<td>${leave.EmployeeID}</td>
+                const leave =
+                    leaveDoc.data();
 
-<td>${leave.LeaveType}</td>
 
-<td>${leave.NumberOfDays}</td>
+                html += `
 
-<td>
+                    <tr>
 
-<button
-onclick="approveLeave('${leaveDoc.id}')">
+                        <td>
+                            ${leave.Name || ""}
+                        </td>
 
-Approve
+                        <td>
+                            ${leave.EmployeeID || ""}
+                        </td>
 
-</button>
+                        <td>
+                            ${leave.LeaveType || ""}
+                        </td>
 
-<button
-onclick="rejectLeave('${leaveDoc.id}')">
+                        <td>
+                            ${leave.NumberOfDays || ""}
+                        </td>
 
-Reject
+                        <td>
 
-</button>
+                            ${
+                                status ===
+                                "Pending"
 
-</td>
+                                ? `
 
-</tr>
+                                    <button
+                                        onclick="
+                                            approveLeave(
+                                                '${leaveDoc.id}'
+                                            )
+                                        "
+                                    >
 
-`;
+                                        Approve
 
+                                    </button>
 
-});
 
+                                    <button
+                                        onclick="
+                                            rejectLeave(
+                                                '${leaveDoc.id}'
+                                            )
+                                        "
+                                    >
 
-html += "</table>";
+                                        Reject
 
+                                    </button>
 
-resultsDiv.innerHTML = html;
+                                `
 
+                                : "No Action"
 
-}
+                            }
 
-window.approveLeave = approveLeave;
-window.rejectLeave = rejectLeave;
+                        </td>
 
-async function approveLeave(documentID){
+                    </tr>
 
+                `;
 
-await updateDoc(
+            }
+        );
 
-doc(
-db,
-"employeeLeaveRequests",
-documentID
-),
 
-{
+        html += `
 
-Status : "Approved"
+                </tbody>
 
-}
+            </table>
+
+        `;
+
+
+        if (resultsDiv) {
 
-);
+            resultsDiv.innerHTML =
+                html;
 
+        }
 
-alert("Leave Approved Successfully.");
+    }
 
-loadPendingLeaves();
+    catch (error) {
 
+        console.log(error);
 
+        alert(
+            error.message
+        );
+
+    }
+
 }
 
-async function rejectLeave(documentID){
 
+/**********************************************************************
+ * APPROVE LEAVE
+ **********************************************************************/
 
-await updateDoc(
+async function approveLeave(
+    documentID
+) {
 
-doc(
-db,
-"employeeLeaveRequests",
-documentID
-),
+    try {
 
-{
 
-Status : "Rejected"
+        await updateDoc(
 
-}
+            doc(
+                db,
+                "employeeLeaveRequests",
+                documentID
+            ),
+
+            {
+
+                Status:
+                    "Approved"
 
-);
+            }
 
+        );
 
-alert("Leave Rejected Successfully.");
 
-loadPendingLeaves();
+        alert(
+            "Leave Approved Successfully."
+        );
 
 
+        loadPendingLeaves();
+
+    }
+
+    catch (error) {
+
+        console.log(error);
+
+        alert(
+            error.message
+        );
+
+    }
+
 }
+
+
+/**********************************************************************
+ * REJECT LEAVE
+ **********************************************************************/
+
+async function rejectLeave(
+    documentID
+) {
+
+    try {
+
+
+        await updateDoc(
+
+            doc(
+                db,
+                "employeeLeaveRequests",
+                documentID
+            ),
+
+            {
+
+                Status:
+                    "Rejected"
+
+            }
+
+        );
 
 
+        alert(
+            "Leave Rejected Successfully."
+        );
+
+
+        loadPendingLeaves();
+
+    }
+
+    catch (error) {
+
+        console.log(error);
+
+        alert(
+            error.message
+        );
+
+    }
+
 }
+
+
+/**********************************************************************
+ * GLOBAL FUNCTIONS
+ *
+ * Required because Edit/Delete/Approve/Reject buttons
+ * use inline onclick handlers.
+ **********************************************************************/
+
+window.editEmployee =
+    editEmployee;
+
+
+window.deleteEmployee =
+    deleteEmployee;
+
+
+window.approveLeave =
+    approveLeave;
+
+
+window.rejectLeave =
+    rejectLeave;
 
 /**********************************************************************
  * STUDENT MANAGEMENT
