@@ -1,15 +1,1865 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-    <title>Teacher Dashboard</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Teacher Dashboard | CCEA ERP</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    
+
+
+    <link rel="stylesheet" href="../css/teacher-dashboard.css">
+
+    <!-- Google Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
 </head>
+
 
 <body>
 
-<h1>Teacher Dashboard</h1>
 
-<p>Login Successful.</p>
+<!-- =========================================================
+     APPLICATION WRAPPER
+========================================================= -->
+
+<div class="erp-app">
+
+
+    <!-- =====================================================
+         SIDEBAR
+    ====================================================== -->
+
+    <aside class="sidebar" id="sidebar">
+
+
+        <!-- School Branding -->
+
+        <div class="sidebar-brand">
+
+            <div class="school-logo">
+                CCEA
+            </div>
+
+            <div class="school-brand-text">
+                <h2>CCEA</h2>
+                <span>ERP SYSTEM</span>
+            </div>
+
+        </div>
+
+
+        <!-- Sidebar Navigation -->
+
+        <nav class="sidebar-navigation">
+
+
+            <!-- Dashboard -->
+
+            <a href="#" class="nav-item active">
+
+                <span class="nav-icon">▦</span>
+
+                <span class="nav-text">
+                    Dashboard
+                </span>
+
+            </a>
+
+
+            <!-- Academics -->
+
+            <div class="nav-section">
+
+                <div class="nav-section-title">
+                    ACADEMICS
+                </div>
+
+
+                <a href="#" class="nav-item">
+
+                    <span class="nav-icon">▣</span>
+
+                    <span class="nav-text">
+                        My Classes
+                    </span>
+
+                </a>
+
+
+                <a href="#" class="nav-item">
+
+                    <span class="nav-icon">◫</span>
+
+                    <span class="nav-text">
+                        Timetable
+                    </span>
+
+                </a>
+
+
+                <a href="#" class="nav-item">
+
+                    <span class="nav-icon">▤</span>
+
+                    <span class="nav-text">
+                        Subject Materials
+                    </span>
+
+                </a>
+
+            </div>
+
+
+            <!-- Students -->
+
+            <div class="nav-section">
+
+                <div class="nav-section-title">
+                    STUDENTS
+                </div>
+
+
+                <a href="#" class="nav-item">
+
+                    <span class="nav-icon">♙</span>
+
+                    <span class="nav-text">
+                        My Students
+                    </span>
+
+                </a>
+
+
+                <a href="#" class="nav-item">
+
+                    <span class="nav-icon">▧</span>
+
+                    <span class="nav-text">
+                        Student Documents
+                    </span>
+
+                </a>
+
+            </div>
+
+
+            <!-- Academic Work -->
+
+            <div class="nav-section">
+
+                <div class="nav-section-title">
+                    ACADEMIC WORK
+                </div>
+
+
+                <a href="#" class="nav-item">
+
+                    <span class="nav-icon">✓</span>
+
+                    <span class="nav-text">
+                        Attendance
+                    </span>
+
+                    <span class="nav-badge warning">
+                        1
+                    </span>
+
+                </a>
+
+
+                <a href="#" class="nav-item">
+
+                    <span class="nav-icon">▤</span>
+
+                    <span class="nav-text">
+                        Assignments
+                    </span>
+
+                </a>
+
+
+                <a href="#" class="nav-item">
+
+                    <span class="nav-icon">▥</span>
+
+                    <span class="nav-text">
+                        Marks
+                    </span>
+
+                </a>
+
+            </div>
+
+
+            <!-- Communication -->
+
+            <div class="nav-section">
+
+                <div class="nav-section-title">
+                    COMMUNICATION
+                </div>
+
+
+                <a href="#" class="nav-item">
+
+                    <span class="nav-icon">✉</span>
+
+                    <span class="nav-text">
+                        Announcements
+                    </span>
+
+                </a>
+
+
+                <a href="#" class="nav-item">
+
+                    <span class="nav-icon">☏</span>
+
+                    <span class="nav-text">
+                        Messages
+                    </span>
+
+                    <span class="nav-badge">
+                        2
+                    </span>
+
+                </a>
+
+            </div>
+
+
+            <!-- Reports -->
+
+            <div class="nav-section">
+
+                <div class="nav-section-title">
+                    SYSTEM
+                </div>
+
+
+                <a href="#" class="nav-item">
+
+                    <span class="nav-icon">▥</span>
+
+                    <span class="nav-text">
+                        Reports
+                    </span>
+
+                </a>
+
+
+                <a href="#" class="nav-item">
+
+                    <span class="nav-icon">⚙</span>
+
+                    <span class="nav-text">
+                        Profile & Settings
+                    </span>
+
+                </a>
+
+            </div>
+
+        </nav>
+
+
+        <!-- Sidebar Footer -->
+
+        <div class="sidebar-footer">
+
+            <div class="sidebar-footer-line"></div>
+
+            <p>Christ Convent English Academy</p>
+
+            <span>Academic Session 2026–27</span>
+
+        </div>
+
+    </aside>
+
+
+
+    <!-- =====================================================
+         MAIN AREA
+    ====================================================== -->
+
+    <div class="main-area">
+
+
+        <!-- =================================================
+             TOPBAR
+        ================================================== -->
+
+        <header class="topbar">
+
+
+            <div class="topbar-left">
+
+                <button
+                    class="sidebar-toggle"
+                    id="sidebarToggle"
+                    type="button">
+
+                    ☰
+
+                </button>
+
+
+                <div class="page-location">
+
+                    <span class="page-location-main">
+                        Teacher Portal
+                    </span>
+
+                    <span class="page-location-divider">
+                        /
+                    </span>
+
+                    <span class="page-location-current">
+                        Dashboard
+                    </span>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="topbar-right">
+
+
+                <!-- Notifications -->
+
+                <button class="topbar-action">
+                    <i class="fa-solid fa-bell"></i>
+                    <span class="badge">3</span>
+                </button>
+
+
+                <!-- Messages -->
+
+                <button class="topbar-action">
+                    <i class="fa-solid fa-envelope"></i>
+                    <span class="badge">2</span>
+                </button>
+
+
+                <!-- Teacher Profile -->
+
+                <div class="teacher-profile">
+
+
+                    <div class="teacher-avatar">
+                        PS
+                    </div>
+
+
+                    <div class="teacher-profile-info">
+
+                        <strong>
+                            Priya Sharma
+                        </strong>
+
+                        <span>
+                            Teacher
+                        </span>
+
+                    </div>
+
+
+                    <span class="profile-arrow">
+                        ▾
+                    </span>
+
+                </div>
+
+            </div>
+
+        </header>
+
+
+
+        <!-- =================================================
+             SCROLLABLE CONTENT
+        ================================================== -->
+
+        <main class="content-area">
+
+
+            <!-- =================================================
+                 PAGE HEADER
+            ================================================== -->
+
+            <section class="page-header">
+
+                <div>
+
+                    <span class="page-header-label">
+                        TEACHER OVERVIEW
+                    </span>
+
+                    <h1>
+                        Welcome back, Priya Sharma!
+                    </h1>
+
+                    <p>
+                        Here's your academic overview for today.
+                    </p>
+
+                </div>
+
+
+                <div class="academic-session">
+
+                    <span>
+                        Academic Session
+                    </span>
+
+                    <strong>
+                        2026–27
+                    </strong>
+
+                </div>
+
+            </section>
+
+
+
+            <!-- =================================================
+                 TEACHER OVERVIEW CARD
+            ================================================== -->
+
+            <section class="teacher-overview">
+
+
+                <div class="overview-main">
+
+
+                    <div class="overview-text">
+
+                        <span class="overview-label">
+                            FACULTY OVERVIEW
+                        </span>
+
+                        <h2>
+                            Priya Sharma
+                        </h2>
+
+                        <p class="overview-designation">
+                            Senior Teacher • Mathematics
+                        </p>
+
+                        <p class="overview-description">
+                            Manage your classes, attendance, assignments
+                            and student academic activities from one place.
+                        </p>
+
+
+                        <div class="overview-meta">
+
+
+                            <div class="overview-meta-item">
+
+                                <span>
+                                    Classes
+                                </span>
+
+                                <strong>
+                                    3
+                                </strong>
+
+                            </div>
+
+
+                            <div class="overview-meta-item">
+
+                                <span>
+                                    Subjects
+                                </span>
+
+                                <strong>
+                                    2
+                                </strong>
+
+                            </div>
+
+
+                            <div class="overview-meta-item">
+
+                                <span>
+                                    Class Teacher
+                                </span>
+
+                                <strong>
+                                    8-A
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="overview-circle">
+
+                        <div class="circle-number">
+                            3
+                        </div>
+
+                        <span>
+                            Assigned<br>
+                            Classes
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+            </section>
+
+
+
+            <!-- =================================================
+                 QUICK STATISTICS
+            ================================================== -->
+
+            <section class="dashboard-section">
+
+
+                <div class="section-heading">
+
+                    <div>
+
+                        <span class="section-label">
+                            OVERVIEW
+                        </span>
+
+                        <h2>
+                            Quick Statistics
+                        </h2>
+
+                    </div>
+
+                </div>
+
+
+                <div class="statistics-grid">
+
+
+                    <!-- Total Students -->
+
+                    <div class="stat-card">
+
+                        <div class="stat-icon purple">
+                            ♙
+                        </div>
+
+                        <div class="stat-content">
+
+                            <span>
+                                Total Students
+                            </span>
+
+                            <strong>
+                                84
+                            </strong>
+
+                            <small>
+                                Across assigned classes
+                            </small>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- Classes -->
+
+                    <div class="stat-card">
+
+                        <div class="stat-icon blue">
+                            ▣
+                        </div>
+
+                        <div class="stat-content">
+
+                            <span>
+                                Classes Assigned
+                            </span>
+
+                            <strong>
+                                3
+                            </strong>
+
+                            <small>
+                                Active classes
+                            </small>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- Subjects -->
+
+                    <div class="stat-card">
+
+                        <div class="stat-icon green">
+                            ▤
+                        </div>
+
+                        <div class="stat-content">
+
+                            <span>
+                                Subjects Assigned
+                            </span>
+
+                            <strong>
+                                2
+                            </strong>
+
+                            <small>
+                                Mathematics & Science
+                            </small>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- Today's Classes -->
+
+                    <div class="stat-card">
+
+                        <div class="stat-icon orange">
+                            ◫
+                        </div>
+
+                        <div class="stat-content">
+
+                            <span>
+                                Today's Classes
+                            </span>
+
+                            <strong>
+                                4
+                            </strong>
+
+                            <small>
+                                2 completed
+                            </small>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- Attendance Pending -->
+
+                    <div class="stat-card">
+
+                        <div class="stat-icon red">
+                            !
+                        </div>
+
+                        <div class="stat-content">
+
+                            <span>
+                                Attendance Pending
+                            </span>
+
+                            <strong>
+                                1
+                            </strong>
+
+                            <small>
+                                Requires attention
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+
+            <!-- =================================================
+                 TODAY'S SCHEDULE
+            ================================================== -->
+
+            <section class="dashboard-section">
+
+
+                <div class="section-heading">
+
+                    <div>
+
+                        <span class="section-label">
+                            TODAY
+                        </span>
+
+                        <h2>
+                            Today's Schedule
+                        </h2>
+
+                    </div>
+
+
+                    <button
+                        class="outline-button"
+                        type="button">
+
+                        View Timetable →
+
+                    </button>
+
+                </div>
+
+
+
+                <div class="schedule-container">
+
+
+                    <!-- Schedule Item -->
+
+                    <div class="schedule-item">
+
+
+                        <div class="schedule-time">
+
+                            <strong>
+                                09:00 AM
+                            </strong>
+
+                            <span>
+                                09:40 AM
+                            </span>
+
+                        </div>
+
+
+                        <div class="schedule-line">
+
+                            <span></span>
+
+                        </div>
+
+
+                        <div class="schedule-details">
+
+                            <div class="schedule-type">
+                                PERIOD 1
+                            </div>
+
+                            <h3>
+                                Mathematics
+                            </h3>
+
+                            <p>
+                                Class 8-A
+                                <span>•</span>
+                                Room 8-A
+                            </p>
+
+                        </div>
+
+
+                        <div class="schedule-status completed">
+
+                            <span class="status-dot"></span>
+
+                            Completed
+
+                        </div>
+
+
+                        <button
+                            class="schedule-action completed-action"
+                            type="button">
+
+                            View
+
+                        </button>
+
+                    </div>
+
+
+
+                    <!-- Schedule Item -->
+
+                    <div class="schedule-item">
+
+
+                        <div class="schedule-time">
+
+                            <strong>
+                                10:00 AM
+                            </strong>
+
+                            <span>
+                                10:40 AM
+                            </span>
+
+                        </div>
+
+
+                        <div class="schedule-line">
+
+                            <span></span>
+
+                        </div>
+
+
+                        <div class="schedule-details">
+
+                            <div class="schedule-type">
+                                PERIOD 2
+                            </div>
+
+                            <h3>
+                                Science
+                            </h3>
+
+                            <p>
+                                Class 9
+                                <span>•</span>
+                                Room 9
+                            </p>
+
+                        </div>
+
+
+                        <div class="schedule-status pending">
+
+                            <span class="status-dot"></span>
+
+                            Pending
+
+                        </div>
+
+
+                        <button
+                            class="schedule-action"
+                            type="button">
+
+                            Attendance
+
+                        </button>
+
+                    </div>
+
+
+
+                    <!-- Schedule Item -->
+
+                    <div class="schedule-item">
+
+
+                        <div class="schedule-time">
+
+                            <strong>
+                                11:20 AM
+                            </strong>
+
+                            <span>
+                                12:00 PM
+                            </span>
+
+                        </div>
+
+
+                        <div class="schedule-line">
+
+                            <span></span>
+
+                        </div>
+
+
+                        <div class="schedule-details">
+
+                            <div class="schedule-type">
+                                PERIOD 3
+                            </div>
+
+                            <h3>
+                                Mathematics
+                            </h3>
+
+                            <p>
+                                Class 10
+                                <span>•</span>
+                                Room 10
+                            </p>
+
+                        </div>
+
+
+                        <div class="schedule-status upcoming">
+
+                            <span class="status-dot"></span>
+
+                            Upcoming
+
+                        </div>
+
+
+                        <button
+                            class="schedule-action"
+                            type="button">
+
+                            View
+
+                        </button>
+
+                    </div>
+
+
+
+                    <!-- Schedule Item -->
+
+                    <div class="schedule-item">
+
+
+                        <div class="schedule-time">
+
+                            <strong>
+                                01:30 PM
+                            </strong>
+
+                            <span>
+                                02:10 PM
+                            </span>
+
+                        </div>
+
+
+                        <div class="schedule-line">
+
+                            <span></span>
+
+                        </div>
+
+
+                        <div class="schedule-details">
+
+                            <div class="schedule-type">
+                                PERIOD 5
+                            </div>
+
+                            <h3>
+                                Mathematics
+                            </h3>
+
+                            <p>
+                                Class 8-A
+                                <span>•</span>
+                                Room 8-A
+                            </p>
+
+                        </div>
+
+
+                        <div class="schedule-status upcoming">
+
+                            <span class="status-dot"></span>
+
+                            Upcoming
+
+                        </div>
+
+
+                        <button
+                            class="schedule-action"
+                            type="button">
+
+                            View
+
+                        </button>
+
+                    </div>
+
+
+                </div>
+
+            </section>
+
+
+
+            <!-- =================================================
+                 MY CLASSES
+            ================================================== -->
+
+            <section class="dashboard-section">
+
+
+                <div class="section-heading">
+
+                    <div>
+
+                        <span class="section-label">
+                            ACADEMICS
+                        </span>
+
+                        <h2>
+                            My Classes & Subjects
+                        </h2>
+
+                    </div>
+
+
+                    <button
+                        class="outline-button"
+                        type="button">
+
+                        View All →
+
+                    </button>
+
+                </div>
+
+
+
+                <div class="classes-grid">
+
+
+                    <!-- Class Card -->
+
+                    <article class="class-card">
+
+
+                        <div class="class-card-top">
+
+                            <span class="class-type">
+                                CLASS TEACHER
+                            </span>
+
+                            <span class="attendance-good">
+                                87.5%
+                            </span>
+
+                        </div>
+
+
+                        <div class="class-course">
+                            CLASS 8-A
+                        </div>
+
+
+                        <h3>
+                            Mathematics
+                        </h3>
+
+
+                        <p class="subject-code">
+                            MAT-801
+                        </p>
+
+
+                        <div class="class-divider"></div>
+
+
+                        <div class="class-student-info">
+
+                            <div>
+
+                                <span>
+                                    Students Enrolled
+                                </span>
+
+                                <strong>
+                                    32
+                                </strong>
+
+                            </div>
+
+
+                            <div class="student-avatars">
+
+                                <span>AS</span>
+                                <span>RK</span>
+                                <span>MP</span>
+
+                                <span class="avatar-more">
+                                    +29
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="class-actions">
+
+
+                            <button type="button">
+
+                                <span>✓</span>
+
+                                Attendance
+
+                            </button>
+
+
+                            <button type="button">
+
+                                <span>▤</span>
+
+                                Assignments
+
+                            </button>
+
+
+                            <button type="button">
+
+                                <span>▥</span>
+
+                                Marks
+
+                            </button>
+
+
+                            <button type="button">
+
+                                <span>♙</span>
+
+                                Students
+
+                            </button>
+
+                        </div>
+
+                    </article>
+
+
+
+                    <!-- Class Card -->
+
+                    <article class="class-card">
+
+
+                        <div class="class-card-top">
+
+                            <span class="class-type">
+                                SUBJECT
+                            </span>
+
+                            <span class="attendance-good">
+                                91.2%
+                            </span>
+
+                        </div>
+
+
+                        <div class="class-course">
+                            CLASS 9
+                        </div>
+
+
+                        <h3>
+                            Science
+                        </h3>
+
+
+                        <p class="subject-code">
+                            SCI-901
+                        </p>
+
+
+                        <div class="class-divider"></div>
+
+
+                        <div class="class-student-info">
+
+                            <div>
+
+                                <span>
+                                    Students Enrolled
+                                </span>
+
+                                <strong>
+                                    28
+                                </strong>
+
+                            </div>
+
+
+                            <div class="student-avatars">
+
+                                <span>AK</span>
+                                <span>PS</span>
+                                <span>RV</span>
+
+                                <span class="avatar-more">
+                                    +25
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="class-actions">
+
+
+                            <button type="button">
+
+                                <span>✓</span>
+
+                                Attendance
+
+                            </button>
+
+
+                            <button type="button">
+
+                                <span>▤</span>
+
+                                Assignments
+
+                            </button>
+
+
+                            <button type="button">
+
+                                <span>▥</span>
+
+                                Marks
+
+                            </button>
+
+
+                            <button type="button">
+
+                                <span>♙</span>
+
+                                Students
+
+                            </button>
+
+                        </div>
+
+                    </article>
+
+
+
+                    <!-- Class Card -->
+
+                    <article class="class-card">
+
+
+                        <div class="class-card-top">
+
+                            <span class="class-type">
+                                SUBJECT
+                            </span>
+
+                            <span class="attendance-warning">
+                                78.4%
+                            </span>
+
+                        </div>
+
+
+                        <div class="class-course">
+                            CLASS 10
+                        </div>
+
+
+                        <h3>
+                            Mathematics
+                        </h3>
+
+
+                        <p class="subject-code">
+                            MAT-1001
+                        </p>
+
+
+                        <div class="class-divider"></div>
+
+
+                        <div class="class-student-info">
+
+                            <div>
+
+                                <span>
+                                    Students Enrolled
+                                </span>
+
+                                <strong>
+                                    24
+                                </strong>
+
+                            </div>
+
+
+                            <div class="student-avatars">
+
+                                <span>RJ</span>
+                                <span>SK</span>
+                                <span>AP</span>
+
+                                <span class="avatar-more">
+                                    +21
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="class-actions">
+
+
+                            <button type="button">
+
+                                <span>✓</span>
+
+                                Attendance
+
+                            </button>
+
+
+                            <button type="button">
+
+                                <span>▤</span>
+
+                                Assignments
+
+                            </button>
+
+
+                            <button type="button">
+
+                                <span>▥</span>
+
+                                Marks
+
+                            </button>
+
+
+                            <button type="button">
+
+                                <span>♙</span>
+
+                                Students
+
+                            </button>
+
+                        </div>
+
+                    </article>
+
+                </div>
+
+            </section>
+
+
+
+            <!-- =================================================
+                 ATTENDANCE + PENDING TASKS
+            ================================================== -->
+
+            <section class="dashboard-two-column">
+
+
+                <!-- Attendance Overview -->
+
+                <div class="dashboard-panel">
+
+
+                    <div class="panel-heading">
+
+                        <div>
+
+                            <span class="section-label">
+                                ATTENDANCE
+                            </span>
+
+                            <h2>
+                                Attendance Overview
+                            </h2>
+
+                        </div>
+
+                        <button
+                            class="panel-menu"
+                            type="button">
+
+                            ⋮
+
+                        </button>
+
+                    </div>
+
+
+                    <div class="attendance-overview">
+
+
+                        <div class="attendance-main">
+
+                            <div class="attendance-circle">
+
+                                <div>
+
+                                    <strong>
+                                        86.4%
+                                    </strong>
+
+                                    <span>
+                                        Average
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="attendance-details">
+
+
+                            <div class="attendance-detail">
+
+                                <span class="detail-icon green">
+                                    ✓
+                                </span>
+
+                                <div>
+
+                                    <strong>
+                                        Today's Attendance
+                                    </strong>
+
+                                    <span>
+                                        92%
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="attendance-detail">
+
+                                <span class="detail-icon orange">
+                                    !
+                                </span>
+
+                                <div>
+
+                                    <strong>
+                                        Pending Attendance
+                                    </strong>
+
+                                    <span>
+                                        1 class
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="attendance-detail">
+
+                                <span class="detail-icon red">
+                                    ↓
+                                </span>
+
+                                <div>
+
+                                    <strong>
+                                        Below Threshold
+                                    </strong>
+
+                                    <span>
+                                        4 students
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <button
+                        class="primary-full-button"
+                        type="button">
+
+                        Open Attendance Management →
+
+                    </button>
+
+                </div>
+
+
+
+                <!-- Pending Tasks -->
+
+                <div class="dashboard-panel">
+
+
+                    <div class="panel-heading">
+
+                        <div>
+
+                            <span class="section-label">
+                                ACTION REQUIRED
+                            </span>
+
+                            <h2>
+                                Pending Tasks
+                            </h2>
+
+                        </div>
+
+                        <span class="task-count">
+                            4
+                        </span>
+
+                    </div>
+
+
+                    <div class="task-list">
+
+
+                        <div class="task-item">
+
+                            <span class="task-icon red">
+                                ✓
+                            </span>
+
+                            <div class="task-content">
+
+                                <strong>
+                                    Attendance not submitted
+                                </strong>
+
+                                <span>
+                                    Class 9 • Science
+                                </span>
+
+                            </div>
+
+                            <span class="task-arrow">
+                                →
+                            </span>
+
+                        </div>
+
+
+                        <div class="task-item">
+
+                            <span class="task-icon purple">
+                                ▤
+                            </span>
+
+                            <div class="task-content">
+
+                                <strong>
+                                    Assignments to evaluate
+                                </strong>
+
+                                <span>
+                                    6 submissions pending
+                                </span>
+
+                            </div>
+
+                            <span class="task-arrow">
+                                →
+                            </span>
+
+                        </div>
+
+
+                        <div class="task-item">
+
+                            <span class="task-icon orange">
+                                ▥
+                            </span>
+
+                            <div class="task-content">
+
+                                <strong>
+                                    Marks pending
+                                </strong>
+
+                                <span>
+                                    Class 10 • Mathematics
+                                </span>
+
+                            </div>
+
+                            <span class="task-arrow">
+                                →
+                            </span>
+
+                        </div>
+
+
+                        <div class="task-item">
+
+                            <span class="task-icon blue">
+                                📄
+                            </span>
+
+                            <div class="task-content">
+
+                                <strong>
+                                    Leave requests
+                                </strong>
+
+                                <span>
+                                    2 requests pending
+                                </span>
+
+                            </div>
+
+                            <span class="task-arrow">
+                                →
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+
+            <!-- =================================================
+                 RECENT ACTIVITIES
+            ================================================== -->
+
+            <section class="dashboard-section">
+
+
+                <div class="section-heading">
+
+                    <div>
+
+                        <span class="section-label">
+                            ACTIVITY
+                        </span>
+
+                        <h2>
+                            Recent Activities
+                        </h2>
+
+                    </div>
+
+
+                    <button
+                        class="outline-button"
+                        type="button">
+
+                        View All →
+
+                    </button>
+
+                </div>
+
+
+
+                <div class="activity-panel">
+
+
+                    <div class="activity-item">
+
+
+                        <div class="activity-icon green">
+                            ✓
+                        </div>
+
+
+                        <div class="activity-content">
+
+                            <strong>
+                                Attendance submitted
+                            </strong>
+
+                            <p>
+                                Attendance for Class 8-A Mathematics
+                                was successfully submitted.
+                            </p>
+
+                            <span>
+                                Today • 09:42 AM
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="activity-item">
+
+
+                        <div class="activity-icon purple">
+                            ▤
+                        </div>
+
+
+                        <div class="activity-content">
+
+                            <strong>
+                                Assignment uploaded
+                            </strong>
+
+                            <p>
+                                Mathematics Chapter 4 assignment
+                                was uploaded for Class 8-A.
+                            </p>
+
+                            <span>
+                                Today • 08:15 AM
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="activity-item">
+
+
+                        <div class="activity-icon blue">
+                            ▥
+                        </div>
+
+
+                        <div class="activity-content">
+
+                            <strong>
+                                Marks updated
+                            </strong>
+
+                            <p>
+                                Unit Test marks were updated for
+                                Class 10 Mathematics.
+                            </p>
+
+                            <span>
+                                Yesterday • 03:24 PM
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="activity-item">
+
+
+                        <div class="activity-icon orange">
+                            📄
+                        </div>
+
+
+                        <div class="activity-content">
+
+                            <strong>
+                                Student leave approved
+                            </strong>
+
+                            <p>
+                                Leave request for a student in
+                                Class 9 was processed.
+                            </p>
+
+                            <span>
+                                Yesterday • 01:10 PM
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+
+            <!-- =================================================
+                 FOOTER
+            ================================================== -->
+
+            <footer class="dashboard-footer">
+
+                <div>
+
+                    <strong>
+                        CCEA ERP
+                    </strong>
+
+                    <span>
+                        Teacher Portal
+                    </span>
+
+                </div>
+
+
+                <span>
+                    Christ Convent English Academy • 2026–27
+                </span>
+
+            </footer>
+
+
+        </main>
+
+    </div>
+
+</div>
+
+
+
+<!-- =========================================================
+     SIDEBAR TOGGLE
+========================================================= -->
+
+<script src="../js/teacher-dashboard.js"></script>
+
+   <!-- const sidebarToggle =
+        document.getElementById("sidebarToggle");
+
+    const sidebar =
+        document.getElementById("sidebar");
+
+
+    sidebarToggle.addEventListener("click", function () {
+
+        sidebar.classList.toggle("collapsed");
+
+    });
+
+</script> -->
+
 
 </body>
 
