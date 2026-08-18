@@ -1,36 +1,31 @@
 /*
-============================================================
-TEACHER DASHBOARD
-Christ Convent English Academy ERP
-Phase 1
-============================================================
-
-Responsibilities:
-- Firebase authentication
-- Load teacher information
-- Load assigned subjects
-- Load assigned classes
-- Load students
-- Load timetable
-- Load examinations
-- Load attendance settings
-- Update existing HTML dashboard
-- Handle refresh
-- Handle logout
-
-IMPORTANT:
-This JS does NOT rebuild the dashboard HTML.
-The HTML/CSS controls the UI.
-This file controls the data and functionality.
-============================================================
-*/
+ * ============================================================
+ * CCEA ERP - TEACHER DASHBOARD
+ * PHASE 1
+ * ============================================================
+ *
+ * CURRENT FIRESTORE COLLECTIONS USED:
+ *
+ * users
+ * classes
+ *
+ * FUTURE COLLECTIONS:
+ *
+ * subjects
+ * students
+ * timetables
+ * attendance
+ * assignments
+ * marks
+ * leaveRequests
+ *
+ * ============================================================
+ */
 
 
-/*
-============================================================
-FIREBASE IMPORTS
-============================================================
-*/
+/* ============================================================
+   FIREBASE IMPORTS
+   ============================================================ */
 
 import { auth, db } from "./firebase-config.js";
 
@@ -41,65 +36,169 @@ import {
 
 import {
     collection,
-    getDocs,
     getDoc,
-    doc,
-    query,
-    where
+    getDocs,
+    doc
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
 
-/*
-============================================================
-GLOBAL VARIABLES
-============================================================
-*/
+/* ============================================================
+   GLOBAL STATE
+   ============================================================ */
 
 let currentUser = null;
 let currentUserData = null;
-let currentEmployee = null;
 
-let teacherSubjects = [];
 let teacherClasses = [];
-let teacherStudents = [];
-let teacherTimetables = [];
-let teacherExaminations = [];
 
-let attendanceSettings = null;
+const CURRENT_ACADEMIC_SESSION = "2026–27";
 
 
-/*
-============================================================
-AUTHENTICATION
-============================================================
-*/
+/* ============================================================
+   UTILITY FUNCTIONS
+   ============================================================ */
+
+function normalize(value) {
+
+    return String(value ?? "")
+        .trim()
+        .toLowerCase();
+
+}
+
+
+function escapeHTML(value) {
+
+    if (value === null || value === undefined) {
+        return "";
+    }
+
+    return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+
+}
+
+
+function getTeacherName() {
+
+    return (
+        currentUserData?.Name ||
+        currentUser?.displayName ||
+        "Teacher"
+    );
+
+}
+
+
+function getTeacherDesignation() {
+
+    return (
+        currentUserData?.Designation ||
+        currentUserData?.Role ||
+        "Teacher"
+    );
+
+}
+
+
+function getTeacherDepartment() {
+
+    return (
+        currentUserData?.Department ||
+        "Teacher Department"
+    );
+
+}
+
+
+function getAcademicSession() {
+
+    return (
+        currentUserData?.AcademicSession ||
+        CURRENT_ACADEMIC_SESSION
+    );
+
+}
+
+
+function getClassDisplayName(classData) {
+
+    const className =
+        classData?.ClassName || "";
+
+    const section =
+        classData?.Section || "";
+
+    if (className && section) {
+
+        return `Class ${className}-${section}`;
+
+    }
+
+    if (className) {
+
+        return `Class ${className}`;
+
+    }
+
+    return "Class";
+
+}
+
+
+/* ============================================================
+   AUTHENTICATION
+   ============================================================ */
 
 onAuthStateChanged(auth, async (user) => {
 
     if (!user) {
 
-        console.warn("No authenticated teacher found.");
+        console.warn(
+            "No authenticated teacher found."
+        );
 
-        window.location.href = "./login-page.html";
+        window.location.href =
+            "./login-page.html";
 
         return;
+
     }
 
 
     currentUser = user;
 
 
-    console.log("Authenticated Teacher:", currentUser.email);
+    console.log(
+        "Authenticated Teacher:",
+        currentUser.email
+    );
 
 
     try {
 
-        await loadTeacherInformation();
+        await loadTeacherProfile();
+
+        await loadTeacherClasses();
 
         updateTeacherDashboard();
 
-    }
+        initializeSidebar();
 
+        initializeTopbar();
+
+        initializeDashboardButtons();
+
+
+        console.log(
+            "Teacher Dashboard Loaded Successfully."
+        );
+
+    }
     catch (error) {
 
         console.error(
@@ -107,32 +206,23 @@ onAuthStateChanged(auth, async (user) => {
             error
         );
 
-        showDashboardError(error);
+        showDashboardError();
 
     }
 
 });
 
 
-/*
-============================================================
-LOAD TEACHER INFORMATION
-============================================================
-*/
+/* ============================================================
+   LOAD TEACHER PROFILE
+   ============================================================ */
 
-async function loadTeacherInformation() {
+async function loadTeacherProfile() {
 
     if (!currentUser) {
         return;
     }
 
-
-    /*
-    --------------------------------------------------------
-    LOAD USER DOCUMENT
-    users/{UID}
-    --------------------------------------------------------
-    */
 
     try {
 
@@ -143,7 +233,8 @@ async function loadTeacherInformation() {
         );
 
 
-        const userSnapshot = await getDoc(userRef);
+        const userSnapshot =
+            await getDoc(userRef);
 
 
         if (userSnapshot.exists()) {
@@ -151,456 +242,145 @@ async function loadTeacherInformation() {
             currentUserData =
                 userSnapshot.data();
 
+
             console.log(
                 "Teacher User Data:",
                 currentUserData
             );
 
         }
-
         else {
 
             console.warn(
-                "User document not found."
+                "Teacher users document not found:",
+                currentUser.uid
             );
+
+
+            currentUserData = {
+
+                Name:
+                    currentUser.displayName ||
+                    "Teacher",
+
+                Email:
+                    currentUser.email ||
+                    "",
+
+                Role:
+                    "Teacher",
+
+                Department:
+                    "Teacher Department"
+
+            };
 
         }
 
     }
-
     catch (error) {
 
         console.error(
-            "Unable to load user document:",
+            "Unable to load teacher profile:",
             error
         );
 
-    }
 
-
-    /*
-============================================================
-LOAD EMPLOYEE RECORD
-============================================================
-*/
-
-try {
-
-    let employeeFound = false;
-
-
-    /*
-    --------------------------------------------------------
-    1. TRY EMAIL
-    --------------------------------------------------------
-    */
-
-    if (currentUser.email) {
-
-        const employeeQuery = query(
-            collection(db, "employees"),
-            where(
-                "Email",
-                "==",
-                currentUser.email
-            )
-        );
-
-
-        const employeeSnapshot =
-            await getDocs(employeeQuery);
-
-
-        if (!employeeSnapshot.empty) {
-
-            currentEmployee =
-                employeeSnapshot.docs[0].data();
-
-            employeeFound = true;
-
-            console.log(
-                "Employee found using Email:",
-                currentEmployee
-            );
-
-        }
-
-    }
-
-
-    /*
-    --------------------------------------------------------
-    2. TRY USER NAME
-    --------------------------------------------------------
-    */
-
-    if (
-        !employeeFound &&
-        currentUserData?.Name
-    ) {
-
-        const employeeQuery = query(
-            collection(db, "employees"),
-            where(
-                "Name",
-                "==",
-                currentUserData.Name
-            )
-        );
-
-
-        const employeeSnapshot =
-            await getDocs(employeeQuery);
-
-
-        if (!employeeSnapshot.empty) {
-
-            currentEmployee =
-                employeeSnapshot.docs[0].data();
-
-            employeeFound = true;
-
-            console.log(
-                "Employee found using Name:",
-                currentEmployee
-            );
-
-        }
-
-    }
-
-
-    /*
-    --------------------------------------------------------
-    3. TRY UID
-    --------------------------------------------------------
-    */
-
-    if (
-        !employeeFound &&
-        currentUser.uid
-    ) {
-
-        const employeeQuery = query(
-            collection(db, "employees"),
-            where(
-                "uid",
-                "==",
-                currentUser.uid
-            )
-        );
-
-
-        const employeeSnapshot =
-            await getDocs(employeeQuery);
-
-
-        if (!employeeSnapshot.empty) {
-
-            currentEmployee =
-                employeeSnapshot.docs[0].data();
-
-            employeeFound = true;
-
-            console.log(
-                "Employee found using UID:",
-                currentEmployee
-            );
-
-        }
-
-    }
-
-
-    /*
-    --------------------------------------------------------
-    RESULT
-    --------------------------------------------------------
-    */
-
-    if (!employeeFound) {
-
-        console.warn(
-            "Employee record could not be matched."
-        );
-
-
-        /*
-        Use the authenticated user's data
-        as a fallback.
-        */
-
-        currentEmployee = {
+        currentUserData = {
 
             Name:
-                currentUserData?.Name ||
                 currentUser.displayName ||
                 "Teacher",
 
-            Department:
-                currentUserData?.Department ||
-                "Teacher Department",
+            Email:
+                currentUser.email ||
+                "",
 
-            Designation:
-                currentUserData?.Designation ||
-                currentUserData?.Role ||
+            Role:
                 "Teacher",
 
-            Phone:
-                currentUserData?.Phone ||
-                ""
+            Department:
+                "Teacher Department"
 
         };
 
-
-        console.log(
-            "Using users document as teacher profile:",
-            currentEmployee
-        );
-
-    }
-
-}
-
-catch (error) {
-
-    console.error(
-        "Unable to load employee:",
-        error
-    );
-
-
-    /*
-    Fallback to users document
-    */
-
-    currentEmployee = {
-
-        Name:
-            currentUserData?.Name ||
-            currentUser.displayName ||
-            "Teacher",
-
-        Department:
-            currentUserData?.Department ||
-            "Teacher Department",
-
-        Designation:
-            currentUserData?.Designation ||
-            currentUserData?.Role ||
-            "Teacher"
-
-    };
-
-}
-
-
-    /*
-    --------------------------------------------------------
-    LOAD TEACHER DATA
-    --------------------------------------------------------
-    */
-
-    await loadTeacherSubjects();
-
-    await loadTeacherClasses();
-
-    await loadTeacherStudents();
-
-    await loadTeacherTimetable();
-
-    await loadTeacherExaminations();
-
-    await loadAttendanceSettings();
-
-
-    console.log(
-        "Teacher information loaded successfully."
-    );
-
-}
-
-
-/*
-============================================================
-LOAD TEACHER SUBJECTS
-============================================================
-*/
-
-async function loadTeacherSubjects() {
-
-    teacherSubjects = [];
-
-
-    if (!currentEmployee) {
-        return;
-    }
-
-
-    const teacherName =
-        currentEmployee.Name;
-
-
-    if (!teacherName) {
-        return;
-    }
-
-
-    try {
-
-        const subjectsQuery = query(
-            collection(db, "subjects"),
-            where(
-                "TeacherName",
-                "==",
-                teacherName
-            )
-        );
-
-
-        const snapshot =
-            await getDocs(subjectsQuery);
-
-
-        snapshot.forEach((subjectDoc) => {
-
-            teacherSubjects.push({
-
-                id: subjectDoc.id,
-
-                ...subjectDoc.data()
-
-            });
-
-        });
-
-
-        console.log(
-            "Teacher Subjects:",
-            teacherSubjects
-        );
-
-    }
-
-    catch (error) {
-
-        console.error(
-            "Unable to load teacher subjects:",
-            error
-        );
-
     }
 
 }
 
 
-/*
-============================================================
-LOAD TEACHER CLASSES
-============================================================
-*/
+/* ============================================================
+   LOAD TEACHER CLASSES
+   ============================================================ */
 
 async function loadTeacherClasses() {
 
     teacherClasses = [];
 
 
-    if (!currentEmployee) {
-        return;
-    }
-
-
-    const teacherName =
-        currentEmployee.Name;
-
-
-    if (!teacherName) {
-        return;
-    }
-
-
     try {
 
-        const classesQuery = query(
-            collection(db, "classes"),
-            where(
-                "ClassTeacher",
-                "==",
-                teacherName
-            )
-        );
-
-
         const snapshot =
-            await getDocs(classesQuery);
+            await getDocs(
+                collection(
+                    db,
+                    "classes"
+                )
+            );
 
 
-        snapshot.forEach((classDoc) => {
-
-            teacherClasses.push({
-
-                id: classDoc.id,
-
-                ...classDoc.data()
-
-            });
-
-        });
+        const teacherName =
+            normalize(
+                getTeacherName()
+            );
 
 
-        /*
-        --------------------------------------------------------
-        ALSO FIND CLASSES FROM SUBJECT ASSIGNMENTS
-        --------------------------------------------------------
-        */
+        snapshot.forEach(
+            (classDoc) => {
 
-        teacherSubjects.forEach((subject) => {
-
-            const className =
-                subject.ClassName;
+                const classData =
+                    classDoc.data();
 
 
-            if (!className) {
-                return;
-            }
+                const classTeacher =
+                    normalize(
+                        classData.ClassTeacher
+                    );
 
 
-            const alreadyExists =
-                teacherClasses.some(
-                    (classItem) => {
-
-                        return (
-                            normalize(
-                                classItem.ClassName
-                            )
-                            ===
-                            normalize(
-                                className
-                            )
-                        );
-
-                    }
-                );
+                /*
+                 * ------------------------------------------------
+                 * CURRENT DATABASE STRUCTURE
+                 *
+                 * classes document:
+                 *
+                 * ClassName
+                 * Section
+                 * ClassTeacher
+                 * AcademicSession
+                 * Status
+                 * ------------------------------------------------
+                 */
 
 
-            if (!alreadyExists) {
+                if (
+                    classTeacher &&
+                    classTeacher === teacherName
+                ) {
 
-                teacherClasses.push({
+                    teacherClasses.push({
 
-                    ClassName:
-                        className,
+                        id:
+                            classDoc.id,
 
-                    Section:
-                        subject.Section || "",
+                        ...classData
 
-                    Status:
-                        subject.Status || "Active"
+                    });
 
-                });
+                }
 
             }
-
-        });
+        );
 
 
         console.log(
@@ -608,8 +388,31 @@ async function loadTeacherClasses() {
             teacherClasses
         );
 
-    }
 
+        /*
+         * --------------------------------------------------------
+         * IMPORTANT DEBUG INFORMATION
+         * --------------------------------------------------------
+         */
+
+        if (
+            teacherClasses.length === 0 &&
+            snapshot.size > 0
+        ) {
+
+            console.warn(
+                "No class is currently assigned to:",
+                getTeacherName()
+            );
+
+
+            console.warn(
+                "Check the ClassTeacher field in Firestore."
+            );
+
+        }
+
+    }
     catch (error) {
 
         console.error(
@@ -622,393 +425,21 @@ async function loadTeacherClasses() {
 }
 
 
-/*
-============================================================
-LOAD TEACHER STUDENTS
-============================================================
-*/
-
-async function loadTeacherStudents() {
-
-    teacherStudents = [];
-
-
-    if (
-        !teacherClasses ||
-        teacherClasses.length === 0
-    ) {
-
-        return;
-
-    }
-
-
-    try {
-
-        const studentSnapshot =
-            await getDocs(
-                collection(
-                    db,
-                    "students"
-                )
-            );
-
-
-        studentSnapshot.forEach(
-            (studentDoc) => {
-
-                const student =
-                    studentDoc.data();
-
-
-                const belongsToTeacherClass =
-                    teacherClasses.some(
-                        (classItem) => {
-
-                            const className =
-                                normalize(
-                                    classItem.ClassName
-                                );
-
-
-                            const studentClass =
-                                normalize(
-                                    student.Class
-                                );
-
-
-                            return (
-                                className &&
-                                studentClass &&
-                                className === studentClass
-                            );
-
-                        }
-                    );
-
-
-                if (
-                    belongsToTeacherClass
-                ) {
-
-                    teacherStudents.push({
-
-                        id:
-                            studentDoc.id,
-
-                        ...student
-
-                    });
-
-                }
-
-            }
-        );
-
-
-        console.log(
-            "Teacher Students:",
-            teacherStudents
-        );
-
-    }
-
-    catch (error) {
-
-        console.error(
-            "Unable to load students:",
-            error
-        );
-
-    }
-
-}
-
-
-/*
-============================================================
-LOAD TEACHER TIMETABLE
-============================================================
-*/
-
-async function loadTeacherTimetable() {
-
-    teacherTimetables = [];
-
-
-    try {
-
-        const snapshot =
-            await getDocs(
-                collection(
-                    db,
-                    "timetables"
-                )
-            );
-
-
-        snapshot.forEach(
-            (timetableDoc) => {
-
-                const timetable =
-                    timetableDoc.data();
-
-
-                const belongsToTeacherClass =
-                    teacherClasses.some(
-                        (classItem) => {
-
-                            const sameClass =
-                                normalize(
-                                    classItem.ClassName
-                                )
-                                ===
-                                normalize(
-                                    timetable.ClassName
-                                );
-
-
-                            const timetableSection =
-                                normalize(
-                                    timetable.Section
-                                );
-
-
-                            const classSection =
-                                normalize(
-                                    classItem.Section
-                                );
-
-
-                            /*
-                            If section isn't available,
-                            match by class only.
-                            */
-
-                            if (
-                                !timetableSection ||
-                                !classSection
-                            ) {
-
-                                return sameClass;
-
-                            }
-
-
-                            return (
-                                sameClass &&
-                                timetableSection ===
-                                classSection
-                            );
-
-                        }
-                    );
-
-
-                if (
-                    belongsToTeacherClass
-                ) {
-
-                    teacherTimetables.push({
-
-                        id:
-                            timetableDoc.id,
-
-                        ...timetable
-
-                    });
-
-                }
-
-            }
-        );
-
-
-        console.log(
-            "Teacher Timetables:",
-            teacherTimetables
-        );
-
-    }
-
-    catch (error) {
-
-        console.error(
-            "Unable to load timetable:",
-            error
-        );
-
-    }
-
-}
-
-
-/*
-============================================================
-LOAD EXAMINATIONS
-============================================================
-*/
-
-async function loadTeacherExaminations() {
-
-    teacherExaminations = [];
-
-
-    try {
-
-        const snapshot =
-            await getDocs(
-                collection(
-                    db,
-                    "examinations"
-                )
-            );
-
-
-        snapshot.forEach(
-            (examDoc) => {
-
-                const exam =
-                    examDoc.data();
-
-
-                const belongsToTeacherClass =
-                    teacherClasses.some(
-                        (classItem) => {
-
-                            return (
-                                normalize(
-                                    classItem.ClassName
-                                )
-                                ===
-                                normalize(
-                                    exam.ClassName
-                                )
-                            );
-
-                        }
-                    );
-
-
-                if (
-                    belongsToTeacherClass
-                ) {
-
-                    teacherExaminations.push({
-
-                        id:
-                            examDoc.id,
-
-                        ...exam
-
-                    });
-
-                }
-
-            }
-        );
-
-
-        console.log(
-            "Teacher Examinations:",
-            teacherExaminations
-        );
-
-    }
-
-    catch (error) {
-
-        console.error(
-            "Unable to load examinations:",
-            error
-        );
-
-    }
-
-}
-
-
-/*
-============================================================
-LOAD ATTENDANCE SETTINGS
-============================================================
-*/
-
-async function loadAttendanceSettings() {
-
-    attendanceSettings = null;
-
-
-    try {
-
-        const snapshot =
-            await getDocs(
-                collection(
-                    db,
-                    "attendanceSettings"
-                )
-            );
-
-
-        if (!snapshot.empty) {
-
-            const latestDoc =
-                snapshot.docs[
-                    snapshot.docs.length - 1
-                ];
-
-
-            attendanceSettings =
-                latestDoc.data();
-
-        }
-
-
-        console.log(
-            "Attendance Settings:",
-            attendanceSettings
-        );
-
-    }
-
-    catch (error) {
-
-        console.error(
-            "Unable to load attendance settings:",
-            error
-        );
-
-    }
-
-}
-
-
-/*
-============================================================
-UPDATE DASHBOARD
-============================================================
-
-IMPORTANT:
-This function does NOT replace the HTML.
-
-It only updates values inside the existing HTML.
-============================================================
-*/
+/* ============================================================
+   UPDATE ENTIRE DASHBOARD
+   ============================================================ */
 
 function updateTeacherDashboard() {
 
-    console.log(
-        "Updating Teacher Dashboard..."
-    );
+    updateTopbarProfile();
 
-
-    updateTeacherInformation();
-
-    updateStatistics();
+    updatePageHeader();
 
     updateTeacherOverview();
 
-    updateTodaysSchedule();
+    updateStatistics();
+
+    updateTodaySchedule();
 
     updateMyClasses();
 
@@ -1018,566 +449,562 @@ function updateTeacherDashboard() {
 
     updateRecentActivities();
 
-    initializeDashboardButtons();
-
-
-    console.log(
-        "Teacher Dashboard Updated Successfully."
-    );
-
 }
 
 
-/*
-============================================================
-TEACHER INFORMATION
-============================================================
-*/
+/* ============================================================
+   TOPBAR PROFILE
+   ============================================================ */
 
-function updateTeacherInformation() {
+function updateTopbarProfile() {
 
     const teacherName =
-        currentEmployee?.Name ||
-        currentUserData?.Name ||
-        currentUser?.displayName ||
-        "Teacher";
-
+        getTeacherName();
 
     const designation =
-        currentEmployee?.Designation ||
-        currentUserData?.Role ||
-        "Teacher";
+        getTeacherDesignation();
 
 
-    const department =
-        currentEmployee?.Department ||
-        currentUserData?.Department ||
-        "Teaching Department";
-
-
-    const academicSession =
-        currentEmployee?.AcademicSession ||
-        currentUserData?.AcademicSession ||
-        "2026–27";
-
-
-    setText(
-        "teacher-welcome",
-        `Welcome back, ${teacherName}!`
-    );
-
-
-    setText(
-        "teacher-name",
-        teacherName
-    );
-
-
-    setText(
-        "teacher-designation",
-        designation
-    );
-
-
-    setText(
-        "teacher-department",
-        department
-    );
-
-
-    setText(
-        "teacher-academic-session",
-        academicSession
-    );
-
-
-    setText(
-        "assigned-classes",
-        teacherClasses.length
-    );
-
-
-    /*
-    --------------------------------------------------------
-    FALLBACK FOR EXISTING HTML
-    --------------------------------------------------------
-    */
-
-    const welcomeElement =
+    const profile =
         document.querySelector(
-            ".welcome-title"
+            ".teacher-profile"
         );
 
 
-    if (
-        welcomeElement &&
-        !document.getElementById(
-            "teacher-welcome"
-        )
-    ) {
+    if (!profile) {
+        return;
+    }
 
-        welcomeElement.textContent =
-            `Welcome back, ${teacherName}!`;
+
+    const nameElement =
+        profile.querySelector(
+            ".teacher-profile-info strong"
+        );
+
+
+    const roleElement =
+        profile.querySelector(
+            ".teacher-profile-info span"
+        );
+
+
+    const avatar =
+        profile.querySelector(
+            ".teacher-avatar"
+        );
+
+
+    if (nameElement) {
+
+        nameElement.textContent =
+            teacherName;
+
+    }
+
+
+    if (roleElement) {
+
+        roleElement.textContent =
+            designation;
+
+    }
+
+
+    if (avatar) {
+
+        avatar.textContent =
+            getInitials(
+                teacherName
+            );
 
     }
 
 }
 
 
-/*
-============================================================
-TEACHER OVERVIEW CARD
-============================================================
-*/
+/* ============================================================
+   INITIALS
+   ============================================================ */
+
+function getInitials(name) {
+
+    const parts =
+        String(name || "Teacher")
+            .trim()
+            .split(/\s+/)
+            .filter(Boolean);
+
+
+    if (parts.length === 1) {
+
+        return parts[0]
+            .substring(0, 2)
+            .toUpperCase();
+
+    }
+
+
+    return (
+        parts[0][0] +
+        parts[parts.length - 1][0]
+    ).toUpperCase();
+
+}
+
+
+/* ============================================================
+   PAGE HEADER
+   ============================================================ */
+
+function updatePageHeader() {
+
+    const pageHeader =
+        document.querySelector(
+            ".page-header"
+        );
+
+
+    if (!pageHeader) {
+        return;
+    }
+
+
+    const heading =
+        pageHeader.querySelector(
+            "h1"
+        );
+
+
+    const session =
+        pageHeader.querySelector(
+            ".academic-session strong"
+        );
+
+
+    if (heading) {
+
+        heading.textContent =
+            `Welcome back, ${getTeacherName()}!`;
+
+    }
+
+
+    if (session) {
+
+        session.textContent =
+            getAcademicSession();
+
+    }
+
+}
+
+
+/* ============================================================
+   TEACHER OVERVIEW
+   ============================================================ */
 
 function updateTeacherOverview() {
 
+    const overview =
+        document.querySelector(
+            ".teacher-overview"
+        );
+
+
+    if (!overview) {
+        return;
+    }
+
+
     const teacherName =
-        currentEmployee?.Name ||
-        currentUserData?.Name ||
-        currentUser?.displayName ||
-        "Teacher";
+        overview.querySelector(
+            ".overview-text h2"
+        );
 
 
     const designation =
-        currentEmployee?.Designation ||
-        currentUserData?.Role ||
-        "Teacher";
+        overview.querySelector(
+            ".overview-designation"
+        );
 
 
-    const department =
-        currentEmployee?.Department ||
-        currentUserData?.Department ||
-        "Teaching Department";
+    const meta =
+        overview.querySelectorAll(
+            ".overview-meta-item strong"
+        );
 
 
-    setText(
-        "overview-teacher-name",
-        teacherName
-    );
+    const circle =
+        overview.querySelector(
+            ".circle-number"
+        );
 
 
-    setText(
-        "overview-designation",
-        designation
-    );
+    if (teacherName) {
+
+        teacherName.textContent =
+            getTeacherName();
+
+    }
 
 
-    setText(
-        "overview-department",
-        department
-    );
+    if (designation) {
 
+        designation.textContent =
+            getTeacherDesignation() +
+            " • " +
+            getTeacherDepartment();
 
-    setText(
-        "overview-classes",
-        teacherClasses.length
-    );
-
-
-    setText(
-        "overview-subjects",
-        teacherSubjects.length
-    );
+    }
 
 
     /*
-    --------------------------------------------------------
-    CIRCLE
-    --------------------------------------------------------
-    */
+     * Classes
+     */
 
-    setText(
-        "overview-assigned-classes",
-        teacherClasses.length
-    );
+    if (meta[0]) {
+
+        meta[0].textContent =
+            teacherClasses.length;
+
+    }
+
+
+    /*
+     * Subjects
+     *
+     * Subjects collection has not been created yet.
+     */
+
+    if (meta[1]) {
+
+        meta[1].textContent =
+            "0";
+
+    }
+
+
+    /*
+     * Class Teacher
+     */
+
+    if (meta[2]) {
+
+        if (teacherClasses.length > 0) {
+
+            meta[2].textContent =
+                getClassDisplayName(
+                    teacherClasses[0]
+                );
+
+        }
+        else {
+
+            meta[2].textContent =
+                "Not Assigned";
+
+        }
+
+    }
+
+
+    /*
+     * Circle
+     */
+
+    if (circle) {
+
+        circle.textContent =
+            teacherClasses.length;
+
+    }
 
 }
 
 
-/*
-============================================================
-QUICK STATISTICS
-============================================================
-*/
+/* ============================================================
+   QUICK STATISTICS
+   ============================================================ */
 
 function updateStatistics() {
 
-    const totalStudents =
-        teacherStudents.length;
+    const statistics =
+        document.querySelectorAll(
+            ".statistics-grid .stat-card"
+        );
 
 
-    const totalClasses =
-        teacherClasses.length;
+    if (!statistics.length) {
+        return;
+    }
 
 
-    const totalSubjects =
-        teacherSubjects.length;
+    /*
+     * ----------------------------------------------------------
+     * TOTAL STUDENTS
+     *
+     * Students collection doesn't exist yet.
+     * ----------------------------------------------------------
+     */
 
-
-    const todaysClasses =
-        getTodaysClasses().length;
-
-
-    const attendancePending =
-        calculateAttendancePending();
-
-
-    setText(
-        "total-students",
-        totalStudents
-    );
-
-
-    setText(
-        "classes-assigned",
-        totalClasses
-    );
-
-
-    setText(
-        "subjects-assigned",
-        totalSubjects
-    );
-
-
-    setText(
-        "todays-classes",
-        todaysClasses
-    );
-
-
-    setText(
-        "attendance-pending",
-        attendancePending
+    updateStatCard(
+        statistics[0],
+        "0",
+        "Student records not created yet"
     );
 
 
     /*
-    --------------------------------------------------------
-    OPTIONAL SUBTEXTS
-    --------------------------------------------------------
-    */
+     * ----------------------------------------------------------
+     * CLASSES
+     * ----------------------------------------------------------
+     */
 
-    setText(
-        "students-subtext",
-        "Across assigned classes"
+    updateStatCard(
+        statistics[1],
+        String(
+            teacherClasses.length
+        ),
+        teacherClasses.length === 1
+            ? "1 active class"
+            : `${teacherClasses.length} active classes`
     );
 
 
-    setText(
-        "classes-subtext",
-        "Active classes"
+    /*
+     * ----------------------------------------------------------
+     * SUBJECTS
+     * ----------------------------------------------------------
+     */
+
+    updateStatCard(
+        statistics[2],
+        "0",
+        "Subject records not created yet"
     );
 
 
-    setText(
-        "subjects-subtext",
-        getSubjectNames()
+    /*
+     * ----------------------------------------------------------
+     * TODAY'S CLASSES
+     *
+     * Timetable collection doesn't exist yet.
+     * ----------------------------------------------------------
+     */
+
+    updateStatCard(
+        statistics[3],
+        "0",
+        "Timetable not configured"
     );
 
 
-    setText(
-        "today-classes-subtext",
-        `${todaysClasses} scheduled`
-    );
+    /*
+     * ----------------------------------------------------------
+     * ATTENDANCE
+     *
+     * Attendance collection doesn't exist yet.
+     * ----------------------------------------------------------
+     */
 
-
-    setText(
-        "attendance-pending-subtext",
-        attendancePending > 0
-            ? "Requires attention"
-            : "All attendance complete"
+    updateStatCard(
+        statistics[4],
+        "0",
+        "Attendance not configured"
     );
 
 }
 
 
-/*
-============================================================
-TODAY'S SCHEDULE
-============================================================
-*/
+/* ============================================================
+   UPDATE STAT CARD
+   ============================================================ */
 
-function updateTodaysSchedule() {
+function updateStatCard(
+    card,
+    value,
+    subtext
+) {
 
-    const container =
-        document.getElementById(
-            "today-schedule"
-        );
-
-
-    if (!container) {
-
-        console.warn(
-            "today-schedule element not found."
-        );
-
+    if (!card) {
         return;
+    }
+
+
+    const valueElement =
+        card.querySelector(
+            ".stat-content strong"
+        );
+
+
+    const subtextElement =
+        card.querySelector(
+            ".stat-content small"
+        );
+
+
+    if (valueElement) {
+
+        valueElement.textContent =
+            value;
 
     }
 
 
-    const todaysClasses =
-        getTodaysClasses();
+    if (subtextElement) {
 
-
-    if (
-        todaysClasses.length === 0
-    ) {
-
-        container.innerHTML = `
-
-            <div class="empty-state">
-
-                <i class="fa-solid fa-calendar-xmark"></i>
-
-                <p>
-                    No classes scheduled for today.
-                </p>
-
-            </div>
-
-        `;
-
-        return;
+        subtextElement.textContent =
+            subtext;
 
     }
 
-
-    let html = "";
-
-
-    todaysClasses.forEach(
-        (item, index) => {
-
-            const className =
-                item.className ||
-                "Class";
+}
 
 
-            const subject =
-                item.subject ||
-                "Subject";
+/* ============================================================
+   TODAY'S SCHEDULE
+   ============================================================ */
+
+function updateTodaySchedule() {
+
+    const sections =
+        document.querySelectorAll(
+            ".dashboard-section"
+        );
 
 
-            const room =
-                item.room ||
-                "Room not assigned";
+    let scheduleSection = null;
 
 
-            const time =
-                item.time ||
-                `Period ${index + 1}`;
+    sections.forEach(
+        (section) => {
+
+            const heading =
+                section.querySelector(
+                    ".section-heading h2"
+                );
 
 
-            const completed =
-                item.completed;
+            if (
+                heading &&
+                normalize(
+                    heading.textContent
+                ) ===
+                "today's schedule"
+            ) {
 
+                scheduleSection =
+                    section;
 
-            html += `
-
-                <div class="schedule-item">
-
-                    <div class="schedule-time">
-
-                        <strong>
-                            ${escapeHTML(time)}
-                        </strong>
-
-                    </div>
-
-
-                    <div class="schedule-line">
-
-                        <span></span>
-
-                    </div>
-
-
-                    <div class="schedule-details">
-
-                        <small>
-                            PERIOD ${index + 1}
-                        </small>
-
-                        <h3>
-                            ${escapeHTML(subject)}
-                        </h3>
-
-                        <p>
-                            ${escapeHTML(className)}
-                            &nbsp; • &nbsp;
-                            ${escapeHTML(room)}
-                        </p>
-
-                    </div>
-
-
-                    <div class="schedule-status">
-
-                        ${
-                            completed
-
-                            ?
-
-                            `
-                            <span class="status-completed">
-                                <i class="fa-solid fa-circle-check"></i>
-                                Completed
-                            </span>
-                            `
-
-                            :
-
-                            `
-                            <span class="status-pending">
-                                <i class="fa-solid fa-clock"></i>
-                                Pending
-                            </span>
-                            `
-                        }
-
-                    </div>
-
-
-                    <div class="schedule-action">
-
-                        ${
-                            completed
-
-                            ?
-
-                            `
-                            <button
-                                class="schedule-view-btn"
-                                data-index="${index}"
-                            >
-                                View
-                            </button>
-                            `
-
-                            :
-
-                            `
-                            <button
-                                class="schedule-attendance-btn"
-                                data-index="${index}"
-                            >
-                                Attendance
-                            </button>
-                            `
-                        }
-
-                    </div>
-
-                </div>
-
-            `;
+            }
 
         }
     );
 
 
-    container.innerHTML = html;
+    if (!scheduleSection) {
+        return;
+    }
 
-
-    /*
-    --------------------------------------------------------
-    ATTACH BUTTON EVENTS
-    --------------------------------------------------------
-    */
-
-    container
-        .querySelectorAll(
-            ".schedule-view-btn"
-        )
-        .forEach(
-            (button) => {
-
-                button.addEventListener(
-                    "click",
-                    () => {
-
-                        const index =
-                            Number(
-                                button.dataset.index
-                            );
-
-
-                        const selected =
-                            todaysClasses[index];
-
-
-                        console.log(
-                            "Selected class:",
-                            selected
-                        );
-
-                    }
-                );
-
-            }
-        );
-
-
-    container
-        .querySelectorAll(
-            ".schedule-attendance-btn"
-        )
-        .forEach(
-            (button) => {
-
-                button.addEventListener(
-                    "click",
-                    () => {
-
-                        const index =
-                            Number(
-                                button.dataset.index
-                            );
-
-
-                        const selected =
-                            todaysClasses[index];
-
-
-                        handleAttendance(
-                            selected
-                        );
-
-                    }
-                );
-
-            }
-        );
-
-}
-
-
-/*
-============================================================
-MY CLASSES
-============================================================
-*/
-
-function updateMyClasses() {
 
     const container =
-        document.getElementById(
-            "classes-container"
+        scheduleSection.querySelector(
+            ".schedule-container"
         );
 
 
     if (!container) {
+        return;
+    }
 
-        console.warn(
-            "classes-container element not found."
+
+    /*
+     * No timetable collection exists yet.
+     *
+     * Therefore we MUST NOT display fake
+     * timetable information.
+     */
+
+    container.innerHTML = `
+
+        <div class="schedule-item">
+
+            <div class="schedule-time">
+                <strong>--:--</strong>
+                <span>--:--</span>
+            </div>
+
+
+            <div class="schedule-line">
+                <span></span>
+            </div>
+
+
+            <div class="schedule-details">
+
+                <div class="schedule-type">
+                    TODAY
+                </div>
+
+                <h3>
+                    No classes scheduled
+                </h3>
+
+                <p>
+                    Timetable has not been configured yet.
+                </p>
+
+            </div>
+
+
+            <div class="schedule-status upcoming">
+
+                <span class="status-dot"></span>
+
+                Not Configured
+
+            </div>
+
+
+            <button
+                class="schedule-action"
+                type="button"
+                disabled>
+
+                View
+
+            </button>
+
+        </div>
+
+    `;
+
+}
+
+
+/* ============================================================
+   MY CLASSES
+   ============================================================ */
+
+function updateMyClasses() {
+
+    const containers =
+        document.querySelectorAll(
+            ".classes-grid"
         );
 
-        return;
 
+    if (!containers.length) {
+        return;
     }
+
+
+    /*
+     * Use the first classes grid on the page.
+     */
+
+    const container =
+        containers[0];
 
 
     if (
@@ -1588,10 +1015,17 @@ function updateMyClasses() {
 
             <div class="empty-state">
 
-                <i class="fa-solid fa-users"></i>
+                <i class="fa-solid fa-school"></i>
+
+                <h3>
+                    No classes assigned
+                </h3>
 
                 <p>
-                    No classes assigned yet.
+                    No class is currently assigned
+                    to ${escapeHTML(
+                        getTeacherName()
+                    )}.
                 </p>
 
             </div>
@@ -1603,244 +1037,187 @@ function updateMyClasses() {
     }
 
 
-    let html = "";
+    container.innerHTML =
+        teacherClasses
+            .map(
+                (classData) =>
+                    createClassCard(
+                        classData
+                    )
+            )
+            .join("");
 
 
-    teacherClasses.forEach(
-        (classItem) => {
+    initializeClassButtons();
 
-            const className =
-                classItem.ClassName ||
-                "Class";
+}
 
 
-            const section =
-                classItem.Section ||
-                "";
+/* ============================================================
+   CREATE CLASS CARD
+   ============================================================ */
 
+function createClassCard(
+    classData
+) {
 
-            const students =
-                teacherStudents.filter(
-                    (student) => {
+    const className =
+        getClassDisplayName(
+            classData
+        );
 
-                        return (
-                            normalize(
-                                student.Class
-                            )
-                            ===
-                            normalize(
-                                className
-                            )
-                        );
 
-                    }
-                );
+    const status =
+        classData.Status ||
+        "Active";
 
 
-            const classSubjects =
-                teacherSubjects.filter(
-                    (subject) => {
+    const academicSession =
+        classData.AcademicSession ||
+        getAcademicSession();
 
-                        return (
-                            normalize(
-                                subject.ClassName
-                            )
-                            ===
-                            normalize(
-                                className
-                            )
-                        );
 
-                    }
-                );
+    return `
 
+        <article
+            class="class-card"
+            data-class-id="${escapeHTML(
+                classData.id
+            )}">
 
-            const attendance =
-                calculateClassAttendance(
-                    students
-                );
+            <div class="class-card-top">
 
+                <span class="class-type">
 
-            html += `
+                    CLASS TEACHER
 
-                <div class="teacher-class-card">
+                </span>
 
-                    <div class="class-card-header">
 
-                        <div>
+                <span class="attendance-good">
 
-                            <span class="class-badge">
-                                ${escapeHTML(
-                                    section ||
-                                    className
-                                )}
-                            </span>
+                    --
 
-                        </div>
+                </span>
 
+            </div>
 
-                        <span class="attendance-badge">
 
-                            ${attendance}%
+            <div class="class-course">
 
-                        </span>
+                ${escapeHTML(
+                    className
+                )}
 
-                    </div>
+            </div>
 
 
-                    <h3>
-                        ${escapeHTML(className)}
-                        ${
-                            section
-                                ? ` - ${escapeHTML(section)}`
-                                : ""
-                        }
-                    </h3>
+            <h3>
 
+                Class Teacher
 
-                    <p class="class-subject">
+            </h3>
 
-                        ${
-                            classSubjects.length > 0
 
-                            ?
+            <p class="subject-code">
 
-                            escapeHTML(
-                                classSubjects
-                                    .map(
-                                        subject =>
-                                            subject.SubjectName ||
-                                            "Subject"
-                                    )
-                                    .join(" • ")
-                            )
+                ${escapeHTML(
+                    academicSession
+                )}
 
-                            :
+            </p>
 
-                            "No subject information"
-                        }
 
-                    </p>
+            <div class="class-divider"></div>
 
 
-                    <p class="subject-code">
+            <div class="class-student-info">
 
-                        ${
-                            classSubjects.length > 0
+                <div>
 
-                            ?
-
-                            escapeHTML(
-                                classSubjects
-                                    .map(
-                                        subject =>
-                                            subject.SubjectCode ||
-                                            ""
-                                    )
-                                    .filter(Boolean)
-                                    .join(" • ")
-                            )
-
-                            :
-
-                            ""
-                        }
-
-                    </p>
-
-
-                    <div class="class-students">
-
-                        <span>
-                            Students
-                        </span>
-
-                        <strong>
-                            ${students.length}
-                        </strong>
-
-                    </div>
-
-
-                    <div class="class-actions">
-
-                        <button
-                            class="class-action-btn"
-                            data-class="${escapeAttribute(
-                                className
-                            )}"
-                        >
-
-                            <i class="fa-solid fa-calendar-check"></i>
-
-                            Attendance
-
-                        </button>
-
-
-                        <button
-                            class="class-action-btn"
-                            data-class="${escapeAttribute(
-                                className
-                            )}"
-                        >
-
-                            <i class="fa-solid fa-pen"></i>
-
-                            Assignments
-
-                        </button>
-
-
-                        <button
-                            class="class-action-btn"
-                            data-class="${escapeAttribute(
-                                className
-                            )}"
-                        >
-
-                            <i class="fa-solid fa-chart-column"></i>
-
-                            Marks
-
-                        </button>
-
-
-                        <button
-                            class="class-action-btn"
-                            data-class="${escapeAttribute(
-                                className
-                            )}"
-                        >
-
-                            <i class="fa-solid fa-users"></i>
-
-                            Students
-
-                        </button>
-
-                    </div>
+                    <span>
+                        Students Enrolled
+                    </span>
+
+                    <strong>
+                        0
+                    </strong>
 
                 </div>
 
-            `;
 
-        }
-    );
+                <div class="student-avatars">
+
+                    <span>--</span>
+
+                </div>
+
+            </div>
 
 
-    container.innerHTML = html;
+            <div class="class-actions">
+
+                <button
+                    type="button"
+                    data-action="attendance">
+
+                    <span>✓</span>
+
+                    Attendance
+
+                </button>
 
 
-    /*
-    --------------------------------------------------------
-    CLASS BUTTONS
-    --------------------------------------------------------
-    */
+                <button
+                    type="button"
+                    data-action="assignments">
 
-    container
+                    <span>▤</span>
+
+                    Assignments
+
+                </button>
+
+
+                <button
+                    type="button"
+                    data-action="marks">
+
+                    <span>▥</span>
+
+                    Marks
+
+                </button>
+
+
+                <button
+                    type="button"
+                    data-action="students">
+
+                    <span>♙</span>
+
+                    Students
+
+                </button>
+
+            </div>
+
+        </article>
+
+    `;
+
+}
+
+
+/* ============================================================
+   CLASS BUTTONS
+   ============================================================ */
+
+function initializeClassButtons() {
+
+    document
         .querySelectorAll(
-            ".class-action-btn"
+            ".class-card .class-actions button"
         )
         .forEach(
             (button) => {
@@ -1849,19 +1226,23 @@ function updateMyClasses() {
                     "click",
                     () => {
 
-                        const className =
-                            button.dataset.class;
+                        const action =
+                            button.dataset.action;
 
 
-                        console.log(
-                            "Class action:",
-                            className,
-                            button.innerText.trim()
-                        );
+                        const card =
+                            button.closest(
+                                ".class-card"
+                            );
 
 
-                        alert(
-                            `${button.innerText.trim()} for ${className} will be connected in the next module.`
+                        const classId =
+                            card?.dataset.classId;
+
+
+                        handleClassAction(
+                            action,
+                            classId
                         );
 
                     }
@@ -1873,248 +1254,242 @@ function updateMyClasses() {
 }
 
 
-/*
-============================================================
-ATTENDANCE OVERVIEW
-============================================================
-*/
+/* ============================================================
+   CLASS ACTION HANDLER
+   ============================================================ */
+
+function handleClassAction(
+    action,
+    classId
+) {
+
+    const classData =
+        teacherClasses.find(
+            (item) =>
+                item.id === classId
+        );
+
+
+    const className =
+        classData
+            ? getClassDisplayName(
+                classData
+            )
+            : "selected class";
+
+
+    /*
+     * These modules will be implemented later.
+     */
+
+    switch (action) {
+
+        case "attendance":
+
+            alert(
+                `Attendance Management for ${className} will be available in the Attendance module.`
+            );
+
+            break;
+
+
+        case "assignments":
+
+            alert(
+                `Assignments for ${className} will be available after the Assignments module is created.`
+            );
+
+            break;
+
+
+        case "marks":
+
+            alert(
+                `Marks management for ${className} will be available after the Marks module is created.`
+            );
+
+            break;
+
+
+        case "students":
+
+            alert(
+                `Student records for ${className} will be available after the Students collection is created.`
+            );
+
+            break;
+
+    }
+
+}
+
+
+/* ============================================================
+   ATTENDANCE OVERVIEW
+   ============================================================ */
 
 function updateAttendanceOverview() {
 
-    const container =
-        document.getElementById(
-            "attendance-overview"
+    const panels =
+        document.querySelectorAll(
+            ".dashboard-panel"
         );
 
 
-    if (!container) {
+    if (!panels.length) {
         return;
     }
 
 
-    const totalStudents =
-        teacherStudents.length;
+    /*
+     * First panel = Attendance Overview
+     */
+
+    const attendancePanel =
+        panels[0];
 
 
-    const averageAttendance =
-        calculateOverallAttendance();
+    if (!attendancePanel) {
+        return;
+    }
 
 
-    const belowThreshold =
-        calculateStudentsBelowThreshold();
+    const average =
+        attendancePanel.querySelector(
+            ".attendance-circle strong"
+        );
 
 
-    const pending =
-        calculateAttendancePending();
+    if (average) {
+
+        average.textContent =
+            "N/A";
+
+    }
 
 
-    container.innerHTML = `
-
-        <div class="attendance-overview-grid">
-
-            <div class="attendance-stat">
-
-                <span>
-                    Today's Attendance
-                </span>
-
-                <strong>
-                    ${
-                        pending === 0
-                            ? "Complete"
-                            : "Pending"
-                    }
-                </strong>
-
-            </div>
+    const details =
+        attendancePanel.querySelectorAll(
+            ".attendance-detail"
+        );
 
 
-            <div class="attendance-stat">
+    if (details[0]) {
 
-                <span>
-                    Pending Attendance
-                </span>
+        const value =
+            details[0].querySelector(
+                "span:last-child"
+            );
 
-                <strong>
-                    ${pending}
-                </strong>
+        if (value) {
 
-            </div>
+            value.textContent =
+                "Not Available";
 
+        }
 
-            <div class="attendance-stat">
-
-                <span>
-                    Average Attendance
-                </span>
-
-                <strong>
-                    ${averageAttendance}%
-                </strong>
-
-            </div>
+    }
 
 
-            <div class="attendance-stat">
+    if (details[1]) {
 
-                <span>
-                    Below Threshold
-                </span>
+        const value =
+            details[1].querySelector(
+                "span:last-child"
+            );
 
-                <strong>
-                    ${belowThreshold}
-                </strong>
+        if (value) {
 
-            </div>
+            value.textContent =
+                "0 classes";
 
-        </div>
+        }
 
-    `;
-
-
-    setText(
-        "attendance-average",
-        `${averageAttendance}%`
-    );
+    }
 
 
-    setText(
-        "students-below-threshold",
-        belowThreshold
-    );
+    if (details[2]) {
 
+        const value =
+            details[2].querySelector(
+                "span:last-child"
+            );
 
-    setText(
-        "attendance-pending-count",
-        pending
-    );
+        if (value) {
+
+            value.textContent =
+                "0 students";
+
+        }
+
+    }
 
 }
 
 
-/*
-============================================================
-PENDING TASKS
-============================================================
-*/
+/* ============================================================
+   PENDING TASKS
+   ============================================================ */
 
 function updatePendingTasks() {
 
-    const container =
-        document.getElementById(
-            "pending-tasks"
+    const panels =
+        document.querySelectorAll(
+            ".dashboard-panel"
         );
 
 
-    if (!container) {
+    if (panels.length < 2) {
         return;
     }
 
 
-    const attendancePending =
-        calculateAttendancePending();
+    const panel =
+        panels[1];
 
 
-    const assignmentsPending =
-        0;
+    const count =
+        panel.querySelector(
+            ".task-count"
+        );
 
 
-    const marksPending =
-        teacherExaminations.length;
+    if (count) {
+
+        count.textContent =
+            "0";
+
+    }
 
 
-    const leaveRequests =
-        0;
+    const taskList =
+        panel.querySelector(
+            ".task-list"
+        );
 
 
-    container.innerHTML = `
-
-        <div class="pending-task-list">
-
-            <div class="pending-task">
-
-                <div class="pending-task-icon attendance">
-                    <i class="fa-solid fa-calendar-check"></i>
-                </div>
-
-                <div>
-
-                    <strong>
-                        Attendance
-                    </strong>
-
-                    <p>
-                        ${attendancePending}
-                        pending
-                    </p>
-
-                </div>
-
-            </div>
+    if (!taskList) {
+        return;
+    }
 
 
-            <div class="pending-task">
+    taskList.innerHTML = `
 
-                <div class="pending-task-icon assignments">
-                    <i class="fa-solid fa-file-pen"></i>
-                </div>
+        <div class="task-item">
 
-                <div>
+            <span class="task-icon purple">
+                ✓
+            </span>
 
-                    <strong>
-                        Assignments
-                    </strong>
+            <div class="task-content">
 
-                    <p>
-                        ${assignmentsPending}
-                        to evaluate
-                    </p>
+                <strong>
+                    No pending tasks
+                </strong>
 
-                </div>
-
-            </div>
-
-
-            <div class="pending-task">
-
-                <div class="pending-task-icon marks">
-                    <i class="fa-solid fa-chart-column"></i>
-                </div>
-
-                <div>
-
-                    <strong>
-                        Marks
-                    </strong>
-
-                    <p>
-                        ${marksPending}
-                        examinations
-                    </p>
-
-                </div>
-
-            </div>
-
-
-            <div class="pending-task">
-
-                <div class="pending-task-icon leave">
-                    <i class="fa-solid fa-envelope-open-text"></i>
-                </div>
-
-                <div>
-
-                    <strong>
-                        Leave Requests
-                    </strong>
-
-                    <p>
-                        ${leaveRequests}
-                        pending
-                    </p>
-
-                </div>
+                <span>
+                    Academic work modules are not configured yet.
+                </span>
 
             </div>
 
@@ -2125,701 +1500,317 @@ function updatePendingTasks() {
 }
 
 
-/*
-============================================================
-RECENT ACTIVITIES
-============================================================
-*/
+/* ============================================================
+   RECENT ACTIVITIES
+   ============================================================ */
 
 function updateRecentActivities() {
 
-    const container =
-        document.getElementById(
-            "recent-activities"
+    const sections =
+        document.querySelectorAll(
+            ".dashboard-section"
         );
 
 
-    if (!container) {
+    let activityPanel = null;
+
+
+    sections.forEach(
+        (section) => {
+
+            const heading =
+                section.querySelector(
+                    ".section-heading h2"
+                );
+
+
+            if (
+                heading &&
+                normalize(
+                    heading.textContent
+                ) ===
+                "recent activities"
+            ) {
+
+                activityPanel =
+                    section.querySelector(
+                        ".activity-panel"
+                    );
+
+            }
+
+        }
+    );
+
+
+    if (!activityPanel) {
         return;
     }
 
 
-    container.innerHTML = `
+    activityPanel.innerHTML = `
 
-        <div class="activity-list">
+        <div class="activity-item">
 
-            <div class="activity-item">
-
-                <div class="activity-icon">
-                    <i class="fa-solid fa-right-to-bracket"></i>
-                </div>
-
-                <div>
-
-                    <strong>
-                        Teacher dashboard loaded
-                    </strong>
-
-                    <p>
-                        Your academic information has been loaded successfully.
-                    </p>
-
-                </div>
-
+            <div class="activity-icon purple">
+                <i class="fa-solid fa-user-check"></i>
             </div>
 
 
-            ${
-                teacherClasses.length > 0
+            <div class="activity-content">
 
-                ?
+                <strong>
+                    Teacher dashboard loaded
+                </strong>
 
-                `
-                <div class="activity-item">
+                <p>
+                    Your teacher profile was successfully
+                    loaded from Firebase.
+                </p>
 
-                    <div class="activity-icon">
-                        <i class="fa-solid fa-users"></i>
-                    </div>
+                <span>
+                    Just now
+                </span>
 
-                    <div>
-
-                        <strong>
-                            Classes loaded
-                        </strong>
-
-                        <p>
-                            ${teacherClasses.length}
-                            assigned class(es) found.
-                        </p>
-
-                    </div>
-
-                </div>
-                `
-
-                :
-
-                ""
-            }
-
-
-            ${
-                teacherSubjects.length > 0
-
-                ?
-
-                `
-                <div class="activity-item">
-
-                    <div class="activity-icon">
-                        <i class="fa-solid fa-book"></i>
-                    </div>
-
-                    <div>
-
-                        <strong>
-                            Subjects loaded
-                        </strong>
-
-                        <p>
-                            ${teacherSubjects.length}
-                            assigned subject(s) found.
-                        </p>
-
-                    </div>
-
-                </div>
-                `
-
-                :
-
-                ""
-            }
+            </div>
 
         </div>
+
+
+        ${
+            teacherClasses.length > 0
+                ? `
+                    <div class="activity-item">
+
+                        <div class="activity-icon green">
+                            <i class="fa-solid fa-school"></i>
+                        </div>
+
+                        <div class="activity-content">
+
+                            <strong>
+                                Class assignment found
+                            </strong>
+
+                            <p>
+                                ${teacherClasses.length}
+                                class${
+                                    teacherClasses.length === 1
+                                        ? ""
+                                        : "es"
+                                }
+                                assigned to you.
+                            </p>
+
+                            <span>
+                                Just now
+                            </span>
+
+                        </div>
+
+                    </div>
+                `
+                : `
+                    <div class="activity-item">
+
+                        <div class="activity-icon orange">
+                            <i class="fa-solid fa-circle-info"></i>
+                        </div>
+
+                        <div class="activity-content">
+
+                            <strong>
+                                No class assignment found
+                            </strong>
+
+                            <p>
+                                Assign a class to this teacher
+                                in the Firestore classes collection.
+                            </p>
+
+                            <span>
+                                Just now
+                            </span>
+
+                        </div>
+
+                    </div>
+                `
+        }
 
     `;
 
 }
 
 
-/*
-============================================================
-TODAY'S CLASSES
-============================================================
-*/
+/* ============================================================
+   SIDEBAR
+   ============================================================ */
 
-function getTodaysClasses() {
+function initializeSidebar() {
 
-    const result = [];
-
-
-    /*
-    --------------------------------------------------------
-    CURRENT DAY
-    --------------------------------------------------------
-    */
-
-    const today =
-        new Date();
-
-
-    const dayName =
-        today
-            .toLocaleDateString(
-                "en-US",
-                {
-                    weekday: "long"
-                }
-            );
-
-
-    const dayShort =
-        today
-            .toLocaleDateString(
-                "en-US",
-                {
-                    weekday: "short"
-                }
-            );
-
-
-    teacherTimetables.forEach(
-        (timetable) => {
-
-            /*
-            ------------------------------------------------
-            Common possible day fields
-            ------------------------------------------------
-            */
-
-            const timetableDay =
-                timetable.Day ||
-                timetable.day ||
-                timetable.WeekDay ||
-                timetable.weekday ||
-                timetable.DayName ||
-                "";
-
-
-            /*
-            If timetable has a day and it doesn't
-            match today, skip it.
-            */
-
-            if (
-                timetableDay &&
-                normalize(timetableDay) !==
-                normalize(dayName) &&
-                normalize(timetableDay) !==
-                normalize(dayShort)
-            ) {
-
-                return;
-
-            }
-
-
-            /*
-            ------------------------------------------------
-            PERIODS
-            ------------------------------------------------
-            */
-
-            for (
-                let i = 1;
-                i <= 6;
-                i++
-            ) {
-
-                const periodValue =
-                    timetable[
-                        `Period${i}`
-                    ];
-
-
-                if (!periodValue) {
-                    continue;
-                }
-
-
-                const parsed =
-                    parseTimetablePeriod(
-                        periodValue
-                    );
-
-
-                result.push({
-
-                    className:
-                        timetable.ClassName ||
-                        "Class",
-
-                    section:
-                        timetable.Section ||
-                        "",
-
-                    subject:
-                        parsed.subject ||
-                        periodValue,
-
-                    time:
-                        parsed.time ||
-                        `Period ${i}`,
-
-                    room:
-                        parsed.room ||
-                        timetable.Room ||
-                        "Room not assigned",
-
-                    completed:
-                        false,
-
-                    period:
-                        i
-
-                });
-
-            }
-
-        }
-    );
-
-
-    return result;
-
-}
-
-
-/*
-============================================================
-PARSE TIMETABLE PERIOD
-============================================================
-*/
-
-function parseTimetablePeriod(
-    value
-) {
-
-    const text =
-        String(value || "").trim();
-
-
-    if (!text) {
-
-        return {
-
-            subject: "",
-            time: "",
-            room: ""
-
-        };
-
-    }
-
-
-    /*
-    Example possible value:
-
-    Mathematics
-    09:00 AM - 09:40 AM
-    Room 8-A
-    */
-
-
-    const timeMatch =
-        text.match(
-            /(\d{1,2}:\d{2}\s*(?:AM|PM)?\s*[-–]\s*\d{1,2}:\d{2}\s*(?:AM|PM)?)/i
+    const sidebar =
+        document.getElementById(
+            "sidebar"
         );
 
 
-    const roomMatch =
-        text.match(
-            /(Room\s*[-A-Za-z0-9 ]+)/i
+    const toggle =
+        document.getElementById(
+            "sidebarToggle"
         );
-
-
-    let subject =
-        text;
-
-
-    if (timeMatch) {
-
-        subject =
-            subject.replace(
-                timeMatch[0],
-                ""
-            );
-
-    }
-
-
-    if (roomMatch) {
-
-        subject =
-            subject.replace(
-                roomMatch[0],
-                ""
-            );
-
-    }
-
-
-    subject =
-        subject
-            .replace(
-                /\s+/g,
-                " "
-            )
-            .trim();
-
-
-    return {
-
-        subject:
-            subject || "Subject",
-
-        time:
-            timeMatch
-                ? timeMatch[0]
-                : "",
-
-        room:
-            roomMatch
-                ? roomMatch[0].trim()
-                : ""
-
-    };
-
-}
-
-
-/*
-============================================================
-ATTENDANCE PENDING
-============================================================
-*/
-
-function calculateAttendancePending() {
-
-    /*
-    Phase 1:
-    We determine pending attendance from today's
-    timetable.
-
-    Detailed attendance records will be connected
-    in the Attendance Module.
-    */
-
-    const todaysClasses =
-        getTodaysClasses();
 
 
     if (
-        todaysClasses.length === 0
+        !sidebar ||
+        !toggle
     ) {
 
-        return 0;
+        return;
 
     }
 
 
-    /*
-    For now, assume today's classes are
-    pending until the attendance module
-    provides submission data.
-    */
+    toggle.addEventListener(
+        "click",
+        () => {
 
-    return todaysClasses.length;
-
-}
-
-
-/*
-============================================================
-OVERALL ATTENDANCE
-============================================================
-*/
-
-function calculateOverallAttendance() {
-
-    /*
-    Current student documents may not yet
-    contain attendance percentage.
-
-    Therefore we only calculate when
-    attendance data exists.
-    */
-
-    const values = [];
-
-
-    teacherStudents.forEach(
-        (student) => {
-
-            const attendance =
-                Number(
-                    student.AttendancePercentage ??
-                    student.Attendance ??
-                    student.AttendancePercent
-                );
-
-
-            if (
-                Number.isFinite(attendance)
-            ) {
-
-                values.push(
-                    attendance
-                );
-
-            }
-
-        }
-    );
-
-
-    if (
-        values.length === 0
-    ) {
-
-        return 0;
-
-    }
-
-
-    const total =
-        values.reduce(
-            (
-                sum,
-                value
-            ) => sum + value,
-            0
-        );
-
-
-    return Number(
-        (
-            total /
-            values.length
-        ).toFixed(2)
-    );
-
-}
-
-
-/*
-============================================================
-CLASS ATTENDANCE
-============================================================
-*/
-
-function calculateClassAttendance(
-    students
-) {
-
-    if (
-        !students ||
-        students.length === 0
-    ) {
-
-        return 0;
-
-    }
-
-
-    const values = [];
-
-
-    students.forEach(
-        (student) => {
-
-            const attendance =
-                Number(
-                    student.AttendancePercentage ??
-                    student.Attendance ??
-                    student.AttendancePercent
-                );
-
-
-            if (
-                Number.isFinite(attendance)
-            ) {
-
-                values.push(
-                    attendance
-                );
-
-            }
-
-        }
-    );
-
-
-    if (
-        values.length === 0
-    ) {
-
-        return 0;
-
-    }
-
-
-    const total =
-        values.reduce(
-            (
-                sum,
-                value
-            ) => sum + value,
-            0
-        );
-
-
-    return Number(
-        (
-            total /
-            values.length
-        ).toFixed(2)
-    );
-
-}
-
-
-/*
-============================================================
-STUDENTS BELOW ATTENDANCE THRESHOLD
-============================================================
-*/
-
-function calculateStudentsBelowThreshold() {
-
-    const threshold =
-        Number(
-            attendanceSettings?.MinimumAttendance ||
-            75
-        );
-
-
-    return teacherStudents.filter(
-        (student) => {
-
-            const attendance =
-                Number(
-                    student.AttendancePercentage ??
-                    student.Attendance ??
-                    student.AttendancePercent
-                );
-
-
-            return (
-                Number.isFinite(attendance) &&
-                attendance < threshold
+            sidebar.classList.toggle(
+                "collapsed"
             );
 
         }
-    ).length;
-
-}
-
-
-/*
-============================================================
-SUBJECT NAMES
-============================================================
-*/
-
-function getSubjectNames() {
-
-    const names =
-        teacherSubjects
-            .map(
-                subject =>
-                    subject.SubjectName
-            )
-            .filter(Boolean);
-
-
-    if (
-        names.length === 0
-    ) {
-
-        return "Assigned subjects";
-
-    }
-
-
-    return names.join(" • ");
-
-}
-
-
-/*
-============================================================
-ATTENDANCE BUTTON
-============================================================
-*/
-
-function handleAttendance(
-    classData
-) {
-
-    console.log(
-        "Attendance selected:",
-        classData
     );
 
 
     /*
-    Attendance module will be connected
-    here in the next stage.
-    */
+     * Navigation active state
+     */
 
-    alert(
-        `Attendance for ${
-            classData.className ||
-            "this class"
-        } will be opened from the Attendance Module.`
-    );
+    document
+        .querySelectorAll(
+            ".nav-item"
+        )
+        .forEach(
+            (item) => {
+
+                item.addEventListener(
+                    "click",
+                    (event) => {
+
+                        event.preventDefault();
+
+
+                        document
+                            .querySelectorAll(
+                                ".nav-item"
+                            )
+                            .forEach(
+                                (nav) =>
+                                    nav.classList.remove(
+                                        "active"
+                                    )
+                            );
+
+
+                        item.classList.add(
+                            "active"
+                        );
+
+                    }
+                );
+
+            }
+        );
 
 }
 
 
-/*
-============================================================
-REFRESH DASHBOARD
-============================================================
-*/
+/* ============================================================
+   TOPBAR
+   ============================================================ */
 
-async function refreshTeacherDashboard() {
+function initializeTopbar() {
 
-    console.log(
-        "Refreshing Teacher Dashboard..."
-    );
+    /*
+     * Notification button
+     */
 
-
-    try {
-
-        await loadTeacherInformation();
-
-        updateTeacherDashboard();
+    const notificationButton =
+        document.querySelector(
+            ".topbar-action .fa-bell"
+        )?.closest(
+            ".topbar-action"
+        );
 
 
-        console.log(
-            "Teacher Dashboard refreshed."
+    if (notificationButton) {
+
+        notificationButton.addEventListener(
+            "click",
+            () => {
+
+                alert(
+                    "Notifications module will be available soon."
+                );
+
+            }
         );
 
     }
 
-    catch (error) {
 
-        console.error(
-            "Refresh Error:",
-            error
+    /*
+     * Messages button
+     */
+
+    const messageButton =
+        document.querySelector(
+            ".topbar-action .fa-envelope"
+        )?.closest(
+            ".topbar-action"
         );
 
 
-        showDashboardError(
-            error
+    if (messageButton) {
+
+        messageButton.addEventListener(
+            "click",
+            () => {
+
+                alert(
+                    "Messages module will be available soon."
+                );
+
+            }
+        );
+
+    }
+
+
+    /*
+     * Profile
+     */
+
+    const profile =
+        document.querySelector(
+            ".teacher-profile"
+        );
+
+
+    if (profile) {
+
+        profile.addEventListener(
+            "click",
+            () => {
+
+                alert(
+                    `Logged in as ${getTeacherName()}\n\nEmail: ${
+                        currentUser?.email || "Not available"
+                    }`
+                );
+
+            }
         );
 
     }
@@ -2827,93 +1818,145 @@ async function refreshTeacherDashboard() {
 }
 
 
-/*
-============================================================
-INITIALIZE DASHBOARD BUTTONS
-============================================================
-*/
+/* ============================================================
+   DASHBOARD BUTTONS
+   ============================================================ */
 
 function initializeDashboardButtons() {
 
     /*
-    --------------------------------------------------------
-    REFRESH
-    --------------------------------------------------------
-    */
+     * View timetable buttons
+     */
 
-    const refreshButton =
-        document.getElementById(
-            "refresh-teacher-dashboard"
+    document
+        .querySelectorAll(
+            ".outline-button"
+        )
+        .forEach(
+            (button) => {
+
+                const text =
+                    normalize(
+                        button.textContent
+                    );
+
+
+                if (
+                    text.includes(
+                        "view timetable"
+                    )
+                ) {
+
+                    button.addEventListener(
+                        "click",
+                        () => {
+
+                            alert(
+                                "Timetable module will be available after the timetable collection is created."
+                            );
+
+                        }
+                    );
+
+                }
+
+            }
         );
-
-
-    if (refreshButton) {
-
-        refreshButton.onclick =
-            async () => {
-
-                refreshButton.disabled =
-                    true;
-
-
-                const oldText =
-                    refreshButton.innerText;
-
-
-                refreshButton.innerText =
-                    "Refreshing...";
-
-
-                try {
-
-                    await refreshTeacherDashboard();
-
-                }
-
-                finally {
-
-                    refreshButton.disabled =
-                        false;
-
-
-                    refreshButton.innerText =
-                        oldText ||
-                        "Refresh";
-
-                }
-
-            };
-
-    }
 
 
     /*
-    --------------------------------------------------------
-    LOGOUT
-    --------------------------------------------------------
-    */
+     * Attendance management button
+     */
 
-    const logoutButton =
-        document.getElementById(
-            "teacher-logout-button"
+    document
+        .querySelectorAll(
+            ".primary-full-button"
+        )
+        .forEach(
+            (button) => {
+
+                button.addEventListener(
+                    "click",
+                    () => {
+
+                        alert(
+                            "Attendance Management will be implemented next."
+                        );
+
+                    }
+                );
+
+            }
         );
-
-
-    if (logoutButton) {
-
-        logoutButton.onclick =
-            logoutTeacher;
-
-    }
 
 }
 
 
-/*
-============================================================
-LOGOUT
-============================================================
-*/
+/* ============================================================
+   ERROR DISPLAY
+   ============================================================ */
+
+function showDashboardError() {
+
+    const content =
+        document.querySelector(
+            ".content-area"
+        );
+
+
+    if (!content) {
+        return;
+    }
+
+
+    const existing =
+        document.getElementById(
+            "dashboard-error"
+        );
+
+
+    if (existing) {
+
+        existing.remove();
+
+    }
+
+
+    const error =
+        document.createElement(
+            "div"
+        );
+
+
+    error.id =
+        "dashboard-error";
+
+
+    error.textContent =
+        "Unable to load teacher dashboard. Please refresh the page.";
+
+
+    error.style.cssText = `
+        margin: 20px;
+        padding: 16px 20px;
+        border-radius: 12px;
+        background: #fff0f0;
+        color: #a11;
+        border: 1px solid #f0b5b5;
+        font-weight: 600;
+    `;
+
+
+    content.prepend(
+        error
+    );
+
+}
+
+
+/* ============================================================
+   LOGOUT
+   ============================================================ */
 
 async function logoutTeacher() {
 
@@ -2921,204 +1964,45 @@ async function logoutTeacher() {
 
         await signOut(auth);
 
-
         window.location.href =
             "./login-page.html";
 
     }
-
     catch (error) {
 
         console.error(
-            "Logout Error:",
+            "Logout failed:",
             error
         );
 
-
-        alert(
-            "Unable to logout.\n\n" +
-            error.message
-        );
-
     }
 
 }
 
 
-/*
-============================================================
-UTILITY:
-SET TEXT
-============================================================
-*/
-
-function setText(
-    id,
-    value
-) {
-
-    const element =
-        document.getElementById(id);
-
-
-    if (!element) {
-        return;
-    }
-
-
-    element.textContent =
-        value ?? "";
-
-}
-
-
-/*
-============================================================
-UTILITY:
-NORMALIZE
-============================================================
-*/
-
-function normalize(
-    value
-) {
-
-    return String(
-        value ?? ""
-    )
-        .trim()
-        .toLowerCase();
-
-}
-
-
-/*
-============================================================
-UTILITY:
-ESCAPE HTML
-============================================================
-*/
-
-function escapeHTML(
-    value
-) {
-
-    if (
-        value === null ||
-        value === undefined
-    ) {
-
-        return "";
-
-    }
-
-
-    return String(value)
-
-        .replace(
-            /&/g,
-            "&amp;"
-        )
-
-        .replace(
-            /</g,
-            "&lt;"
-        )
-
-        .replace(
-            />/g,
-            "&gt;"
-        )
-
-        .replace(
-            /"/g,
-            "&quot;"
-        )
-
-        .replace(
-            /'/g,
-            "&#039;"
-        );
-
-}
-
-
-/*
-============================================================
-UTILITY:
-ESCAPE ATTRIBUTE
-============================================================
-*/
-
-function escapeAttribute(
-    value
-) {
-
-    return escapeHTML(
-        value
-    );
-
-}
-
-
-/*
-============================================================
-DASHBOARD ERROR
-============================================================
-*/
-
-function showDashboardError(
-    error
-) {
-
-    console.error(
-        "Dashboard Error:",
-        error
-    );
-
-
-    const errorContainer =
-        document.getElementById(
-            "dashboard-error"
-        );
-
-
-    if (errorContainer) {
-
-        errorContainer.textContent =
-            "Unable to load teacher dashboard.";
-
-        errorContainer.style.display =
-            "block";
-
-    }
-
-}
-
-
-/*
-============================================================
-GLOBAL FUNCTIONS
-============================================================
-*/
-
-window.loadTeacherDashboard =
-    updateTeacherDashboard;
-
-
-window.refreshTeacherDashboard =
-    refreshTeacherDashboard;
-
+/* ============================================================
+   GLOBAL FUNCTIONS
+   ============================================================ */
 
 window.logoutTeacher =
     logoutTeacher;
 
 
-/*
-============================================================
-INITIAL LOG
-============================================================
-*/
+window.refreshTeacherDashboard =
+    async function () {
+
+        await loadTeacherProfile();
+
+        await loadTeacherClasses();
+
+        updateTeacherDashboard();
+
+    };
+
+
+/* ============================================================
+   INITIAL LOG
+   ============================================================ */
 
 console.log(
     "Teacher Dashboard JS Loaded Successfully."
