@@ -179,12 +179,23 @@ async function loadTeacherInformation() {
 
 
     /*
+============================================================
+LOAD EMPLOYEE RECORD
+============================================================
+*/
+
+try {
+
+    let employeeFound = false;
+
+
+    /*
     --------------------------------------------------------
-    LOAD EMPLOYEE USING EMAIL
+    1. TRY EMAIL
     --------------------------------------------------------
     */
 
-    try {
+    if (currentUser.email) {
 
         const employeeQuery = query(
             collection(db, "employees"),
@@ -205,33 +216,183 @@ async function loadTeacherInformation() {
             currentEmployee =
                 employeeSnapshot.docs[0].data();
 
+            employeeFound = true;
 
             console.log(
-                "Teacher Employee Data:",
+                "Employee found using Email:",
                 currentEmployee
             );
 
         }
 
-        else {
+    }
 
-            console.warn(
-                "Employee record not found for:",
-                currentUser.email
+
+    /*
+    --------------------------------------------------------
+    2. TRY USER NAME
+    --------------------------------------------------------
+    */
+
+    if (
+        !employeeFound &&
+        currentUserData?.Name
+    ) {
+
+        const employeeQuery = query(
+            collection(db, "employees"),
+            where(
+                "Name",
+                "==",
+                currentUserData.Name
+            )
+        );
+
+
+        const employeeSnapshot =
+            await getDocs(employeeQuery);
+
+
+        if (!employeeSnapshot.empty) {
+
+            currentEmployee =
+                employeeSnapshot.docs[0].data();
+
+            employeeFound = true;
+
+            console.log(
+                "Employee found using Name:",
+                currentEmployee
             );
 
         }
 
     }
 
-    catch (error) {
 
-        console.error(
-            "Unable to load employee:",
-            error
+    /*
+    --------------------------------------------------------
+    3. TRY UID
+    --------------------------------------------------------
+    */
+
+    if (
+        !employeeFound &&
+        currentUser.uid
+    ) {
+
+        const employeeQuery = query(
+            collection(db, "employees"),
+            where(
+                "uid",
+                "==",
+                currentUser.uid
+            )
+        );
+
+
+        const employeeSnapshot =
+            await getDocs(employeeQuery);
+
+
+        if (!employeeSnapshot.empty) {
+
+            currentEmployee =
+                employeeSnapshot.docs[0].data();
+
+            employeeFound = true;
+
+            console.log(
+                "Employee found using UID:",
+                currentEmployee
+            );
+
+        }
+
+    }
+
+
+    /*
+    --------------------------------------------------------
+    RESULT
+    --------------------------------------------------------
+    */
+
+    if (!employeeFound) {
+
+        console.warn(
+            "Employee record could not be matched."
+        );
+
+
+        /*
+        Use the authenticated user's data
+        as a fallback.
+        */
+
+        currentEmployee = {
+
+            Name:
+                currentUserData?.Name ||
+                currentUser.displayName ||
+                "Teacher",
+
+            Department:
+                currentUserData?.Department ||
+                "Teacher Department",
+
+            Designation:
+                currentUserData?.Designation ||
+                currentUserData?.Role ||
+                "Teacher",
+
+            Phone:
+                currentUserData?.Phone ||
+                ""
+
+        };
+
+
+        console.log(
+            "Using users document as teacher profile:",
+            currentEmployee
         );
 
     }
+
+}
+
+catch (error) {
+
+    console.error(
+        "Unable to load employee:",
+        error
+    );
+
+
+    /*
+    Fallback to users document
+    */
+
+    currentEmployee = {
+
+        Name:
+            currentUserData?.Name ||
+            currentUser.displayName ||
+            "Teacher",
+
+        Department:
+            currentUserData?.Department ||
+            "Teacher Department",
+
+        Designation:
+            currentUserData?.Designation ||
+            currentUserData?.Role ||
+            "Teacher"
+
+    };
+
+}
 
 
     /*
