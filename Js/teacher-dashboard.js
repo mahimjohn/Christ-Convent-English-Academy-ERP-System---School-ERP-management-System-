@@ -1,29 +1,36 @@
 /*
- * ============================================================
- * TEACHER DASHBOARD
- * Christ Convent English Academy ERP
- * ============================================================
- *
- * Firebase collections used:
- *
- * users
- * employees
- * students
- * classes
- * subjects
- * timetables
- * attendanceSettings
- * examinations
- *
- * ============================================================
- */
+============================================================
+TEACHER DASHBOARD
+Christ Convent English Academy ERP
+Phase 1
+============================================================
+
+Responsibilities:
+- Firebase authentication
+- Load teacher information
+- Load assigned subjects
+- Load assigned classes
+- Load students
+- Load timetable
+- Load examinations
+- Load attendance settings
+- Update existing HTML dashboard
+- Handle refresh
+- Handle logout
+
+IMPORTANT:
+This JS does NOT rebuild the dashboard HTML.
+The HTML/CSS controls the UI.
+This file controls the data and functionality.
+============================================================
+*/
 
 
 /*
- * ============================================================
- * FIREBASE IMPORTS
- * ============================================================
- */
+============================================================
+FIREBASE IMPORTS
+============================================================
+*/
 
 import { auth, db } from "./firebase-config.js";
 
@@ -43,10 +50,10 @@ import {
 
 
 /*
- * ============================================================
- * GLOBAL VARIABLES
- * ============================================================
- */
+============================================================
+GLOBAL VARIABLES
+============================================================
+*/
 
 let currentUser = null;
 let currentUserData = null;
@@ -62,27 +69,18 @@ let attendanceSettings = null;
 
 
 /*
- * ============================================================
- * CONTENT AREA
- * ============================================================
- */
-
-const contentArea =
-    document.getElementById("content-area");
-
-
-/*
- * ============================================================
- * AUTHENTICATION
- * ============================================================
- */
+============================================================
+AUTHENTICATION
+============================================================
+*/
 
 onAuthStateChanged(auth, async (user) => {
 
     if (!user) {
 
-        window.location.href =
-            "./login-page.html";
+        console.warn("No authenticated teacher found.");
+
+        window.location.href = "./login-page.html";
 
         return;
     }
@@ -91,13 +89,17 @@ onAuthStateChanged(auth, async (user) => {
     currentUser = user;
 
 
+    console.log("Authenticated Teacher:", currentUser.email);
+
+
     try {
 
         await loadTeacherInformation();
 
-        await loadTeacherDashboard();
+        updateTeacherDashboard();
 
     }
+
     catch (error) {
 
         console.error(
@@ -105,10 +107,7 @@ onAuthStateChanged(auth, async (user) => {
             error
         );
 
-        alert(
-            "Unable to load Teacher Dashboard.\n\n" +
-            error.message
-        );
+        showDashboardError(error);
 
     }
 
@@ -116,10 +115,10 @@ onAuthStateChanged(auth, async (user) => {
 
 
 /*
- * ============================================================
- * LOAD TEACHER INFORMATION
- * ============================================================
- */
+============================================================
+LOAD TEACHER INFORMATION
+============================================================
+*/
 
 async function loadTeacherInformation() {
 
@@ -129,24 +128,22 @@ async function loadTeacherInformation() {
 
 
     /*
-     * --------------------------------------------------------
-     * LOAD USER DOCUMENT
-     * users/{UID}
-     * --------------------------------------------------------
-     */
+    --------------------------------------------------------
+    LOAD USER DOCUMENT
+    users/{UID}
+    --------------------------------------------------------
+    */
 
     try {
 
-        const userRef =
-            doc(
-                db,
-                "users",
-                currentUser.uid
-            );
+        const userRef = doc(
+            db,
+            "users",
+            currentUser.uid
+        );
 
 
-        const userSnapshot =
-            await getDoc(userRef);
+        const userSnapshot = await getDoc(userRef);
 
 
         if (userSnapshot.exists()) {
@@ -154,13 +151,27 @@ async function loadTeacherInformation() {
             currentUserData =
                 userSnapshot.data();
 
+            console.log(
+                "Teacher User Data:",
+                currentUserData
+            );
+
+        }
+
+        else {
+
+            console.warn(
+                "User document not found."
+            );
+
         }
 
     }
+
     catch (error) {
 
-        console.log(
-            "User document could not be loaded:",
+        console.error(
+            "Unable to load user document:",
             error
         );
 
@@ -168,13 +179,14 @@ async function loadTeacherInformation() {
 
 
     /*
-     * --------------------------------------------------------
-     * LOAD EMPLOYEE USING EMAIL
-     * --------------------------------------------------------
-     */
+    --------------------------------------------------------
+    LOAD EMPLOYEE USING EMAIL
+    --------------------------------------------------------
+    */
 
-    const employeeQuery =
-        query(
+    try {
+
+        const employeeQuery = query(
             collection(db, "employees"),
             where(
                 "Email",
@@ -184,43 +196,49 @@ async function loadTeacherInformation() {
         );
 
 
-    const employeeSnapshot =
-        await getDocs(employeeQuery);
+        const employeeSnapshot =
+            await getDocs(employeeQuery);
 
 
-    if (!employeeSnapshot.empty) {
+        if (!employeeSnapshot.empty) {
 
-        currentEmployee =
-            employeeSnapshot.docs[0].data();
+            currentEmployee =
+                employeeSnapshot.docs[0].data();
+
+
+            console.log(
+                "Teacher Employee Data:",
+                currentEmployee
+            );
+
+        }
+
+        else {
+
+            console.warn(
+                "Employee record not found for:",
+                currentUser.email
+            );
+
+        }
 
     }
 
+    catch (error) {
 
-    /*
-     * --------------------------------------------------------
-     * SECURITY CHECK
-     * --------------------------------------------------------
-     */
-
-    if (
-        currentUserData &&
-        currentUserData.Role &&
-        currentUserData.Role !== "Teacher"
-    ) {
-
-        console.warn(
-            "Current account role:",
-            currentUserData.Role
+        console.error(
+            "Unable to load employee:",
+            error
         );
 
     }
 
 
     /*
-     * --------------------------------------------------------
-     * LOAD TEACHER DATA
-     * --------------------------------------------------------
-     */
+    --------------------------------------------------------
+    LOAD TEACHER DATA
+    --------------------------------------------------------
+    */
 
     await loadTeacherSubjects();
 
@@ -234,14 +252,19 @@ async function loadTeacherInformation() {
 
     await loadAttendanceSettings();
 
+
+    console.log(
+        "Teacher information loaded successfully."
+    );
+
 }
 
 
 /*
- * ============================================================
- * LOAD TEACHER SUBJECTS
- * ============================================================
- */
+============================================================
+LOAD TEACHER SUBJECTS
+============================================================
+*/
 
 async function loadTeacherSubjects() {
 
@@ -257,8 +280,14 @@ async function loadTeacherSubjects() {
         currentEmployee.Name;
 
 
-    const subjectsQuery =
-        query(
+    if (!teacherName) {
+        return;
+    }
+
+
+    try {
+
+        const subjectsQuery = query(
             collection(db, "subjects"),
             where(
                 "TeacherName",
@@ -268,36 +297,47 @@ async function loadTeacherSubjects() {
         );
 
 
-    const snapshot =
-        await getDocs(subjectsQuery);
+        const snapshot =
+            await getDocs(subjectsQuery);
 
 
-    snapshot.forEach((subjectDoc) => {
+        snapshot.forEach((subjectDoc) => {
 
-        teacherSubjects.push({
+            teacherSubjects.push({
 
-            id: subjectDoc.id,
+                id: subjectDoc.id,
 
-            ...subjectDoc.data()
+                ...subjectDoc.data()
+
+            });
 
         });
 
-    });
 
+        console.log(
+            "Teacher Subjects:",
+            teacherSubjects
+        );
 
-    console.log(
-        "Teacher Subjects:",
-        teacherSubjects
-    );
+    }
+
+    catch (error) {
+
+        console.error(
+            "Unable to load teacher subjects:",
+            error
+        );
+
+    }
 
 }
 
 
 /*
- * ============================================================
- * LOAD TEACHER CLASSES
- * ============================================================
- */
+============================================================
+LOAD TEACHER CLASSES
+============================================================
+*/
 
 async function loadTeacherClasses() {
 
@@ -313,8 +353,14 @@ async function loadTeacherClasses() {
         currentEmployee.Name;
 
 
-    const classesQuery =
-        query(
+    if (!teacherName) {
+        return;
+    }
+
+
+    try {
+
+        const classesQuery = query(
             collection(db, "classes"),
             where(
                 "ClassTeacher",
@@ -324,80 +370,102 @@ async function loadTeacherClasses() {
         );
 
 
-    const snapshot =
-        await getDocs(classesQuery);
+        const snapshot =
+            await getDocs(classesQuery);
 
 
-    snapshot.forEach((classDoc) => {
-
-        teacherClasses.push({
-
-            id: classDoc.id,
-
-            ...classDoc.data()
-
-        });
-
-    });
-
-
-    /*
-     * --------------------------------------------------------
-     * ALSO FIND CLASSES FROM SUBJECT ASSIGNMENTS
-     * --------------------------------------------------------
-     */
-
-    teacherSubjects.forEach((subject) => {
-
-        const className =
-            subject.ClassName;
-
-
-        if (!className) {
-            return;
-        }
-
-
-        const alreadyExists =
-            teacherClasses.some(
-                (classItem) =>
-                    classItem.ClassName ===
-                    className
-            );
-
-
-        if (!alreadyExists) {
+        snapshot.forEach((classDoc) => {
 
             teacherClasses.push({
 
-                ClassName: className,
+                id: classDoc.id,
 
-                Section:
-                    subject.Section || "",
-
-                Status:
-                    subject.Status || "Active"
+                ...classDoc.data()
 
             });
 
-        }
-
-    });
+        });
 
 
-    console.log(
-        "Teacher Classes:",
-        teacherClasses
-    );
+        /*
+        --------------------------------------------------------
+        ALSO FIND CLASSES FROM SUBJECT ASSIGNMENTS
+        --------------------------------------------------------
+        */
+
+        teacherSubjects.forEach((subject) => {
+
+            const className =
+                subject.ClassName;
+
+
+            if (!className) {
+                return;
+            }
+
+
+            const alreadyExists =
+                teacherClasses.some(
+                    (classItem) => {
+
+                        return (
+                            normalize(
+                                classItem.ClassName
+                            )
+                            ===
+                            normalize(
+                                className
+                            )
+                        );
+
+                    }
+                );
+
+
+            if (!alreadyExists) {
+
+                teacherClasses.push({
+
+                    ClassName:
+                        className,
+
+                    Section:
+                        subject.Section || "",
+
+                    Status:
+                        subject.Status || "Active"
+
+                });
+
+            }
+
+        });
+
+
+        console.log(
+            "Teacher Classes:",
+            teacherClasses
+        );
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Unable to load teacher classes:",
+            error
+        );
+
+    }
 
 }
 
 
 /*
- * ============================================================
- * LOAD TEACHER STUDENTS
- * ============================================================
- */
+============================================================
+LOAD TEACHER STUDENTS
+============================================================
+*/
 
 async function loadTeacherStudents() {
 
@@ -414,360 +482,398 @@ async function loadTeacherStudents() {
     }
 
 
-    const studentSnapshot =
-        await getDocs(
-            collection(
-                db,
-                "students"
-            )
+    try {
+
+        const studentSnapshot =
+            await getDocs(
+                collection(
+                    db,
+                    "students"
+                )
+            );
+
+
+        studentSnapshot.forEach(
+            (studentDoc) => {
+
+                const student =
+                    studentDoc.data();
+
+
+                const belongsToTeacherClass =
+                    teacherClasses.some(
+                        (classItem) => {
+
+                            const className =
+                                normalize(
+                                    classItem.ClassName
+                                );
+
+
+                            const studentClass =
+                                normalize(
+                                    student.Class
+                                );
+
+
+                            return (
+                                className &&
+                                studentClass &&
+                                className === studentClass
+                            );
+
+                        }
+                    );
+
+
+                if (
+                    belongsToTeacherClass
+                ) {
+
+                    teacherStudents.push({
+
+                        id:
+                            studentDoc.id,
+
+                        ...student
+
+                    });
+
+                }
+
+            }
         );
 
 
-    studentSnapshot.forEach(
-        (studentDoc) => {
+        console.log(
+            "Teacher Students:",
+            teacherStudents
+        );
 
-            const student =
-                studentDoc.data();
+    }
 
+    catch (error) {
 
-            const belongsToTeacherClass =
-                teacherClasses.some(
-                    (classItem) => {
+        console.error(
+            "Unable to load students:",
+            error
+        );
 
-                        const className =
-                            String(
-                                classItem.ClassName ||
-                                ""
-                            )
-                            .trim()
-                            .toLowerCase();
-
-
-                        const studentClass =
-                            String(
-                                student.Class ||
-                                ""
-                            )
-                            .trim()
-                            .toLowerCase();
-
-
-                        return (
-                            className ===
-                            studentClass
-                        );
-
-                    }
-                );
-
-
-            if (
-                belongsToTeacherClass
-            ) {
-
-                teacherStudents.push({
-
-                    id:
-                        studentDoc.id,
-
-                    ...student
-
-                });
-
-            }
-
-        }
-    );
-
-
-    console.log(
-        "Teacher Students:",
-        teacherStudents
-    );
+    }
 
 }
 
 
 /*
- * ============================================================
- * LOAD TIMETABLE
- * ============================================================
- */
+============================================================
+LOAD TEACHER TIMETABLE
+============================================================
+*/
 
 async function loadTeacherTimetable() {
 
     teacherTimetables = [];
 
 
-    const snapshot =
-        await getDocs(
-            collection(
-                db,
-                "timetables"
-            )
+    try {
+
+        const snapshot =
+            await getDocs(
+                collection(
+                    db,
+                    "timetables"
+                )
+            );
+
+
+        snapshot.forEach(
+            (timetableDoc) => {
+
+                const timetable =
+                    timetableDoc.data();
+
+
+                const belongsToTeacherClass =
+                    teacherClasses.some(
+                        (classItem) => {
+
+                            const sameClass =
+                                normalize(
+                                    classItem.ClassName
+                                )
+                                ===
+                                normalize(
+                                    timetable.ClassName
+                                );
+
+
+                            const timetableSection =
+                                normalize(
+                                    timetable.Section
+                                );
+
+
+                            const classSection =
+                                normalize(
+                                    classItem.Section
+                                );
+
+
+                            /*
+                            If section isn't available,
+                            match by class only.
+                            */
+
+                            if (
+                                !timetableSection ||
+                                !classSection
+                            ) {
+
+                                return sameClass;
+
+                            }
+
+
+                            return (
+                                sameClass &&
+                                timetableSection ===
+                                classSection
+                            );
+
+                        }
+                    );
+
+
+                if (
+                    belongsToTeacherClass
+                ) {
+
+                    teacherTimetables.push({
+
+                        id:
+                            timetableDoc.id,
+
+                        ...timetable
+
+                    });
+
+                }
+
+            }
         );
 
 
-    snapshot.forEach(
-        (timetableDoc) => {
+        console.log(
+            "Teacher Timetables:",
+            teacherTimetables
+        );
 
-            const timetable =
-                timetableDoc.data();
+    }
 
+    catch (error) {
 
-            /*
-             * ------------------------------------------------
-             * Current Admin timetable structure contains:
-             *
-             * ClassName
-             * Section
-             * Period1
-             * Period2
-             * Period3
-             * Period4
-             * Period5
-             * Period6
-             * ------------------------------------------------
-             */
+        console.error(
+            "Unable to load timetable:",
+            error
+        );
 
-
-            const belongsToTeacherClass =
-                teacherClasses.some(
-                    (classItem) => {
-
-                        const sameClass =
-                            String(
-                                classItem.ClassName ||
-                                ""
-                            )
-                            .trim()
-                            .toLowerCase()
-                            ===
-                            String(
-                                timetable.ClassName ||
-                                ""
-                            )
-                            .trim()
-                            .toLowerCase();
-
-
-                        const timetableSection =
-                            String(
-                                timetable.Section ||
-                                ""
-                            )
-                            .trim()
-                            .toLowerCase();
-
-
-                        const classSection =
-                            String(
-                                classItem.Section ||
-                                ""
-                            )
-                            .trim()
-                            .toLowerCase();
-
-
-                        /*
-                         * If section isn't available,
-                         * match by class only.
-                         */
-
-                        if (
-                            !timetableSection ||
-                            !classSection
-                        ) {
-
-                            return sameClass;
-
-                        }
-
-
-                        return (
-                            sameClass &&
-                            timetableSection ===
-                            classSection
-                        );
-
-                    }
-                );
-
-
-            if (
-                belongsToTeacherClass
-            ) {
-
-                teacherTimetables.push({
-
-                    id:
-                        timetableDoc.id,
-
-                    ...timetable
-
-                });
-
-            }
-
-        }
-    );
-
-
-    console.log(
-        "Teacher Timetables:",
-        teacherTimetables
-    );
+    }
 
 }
 
 
 /*
- * ============================================================
- * LOAD EXAMINATIONS
- * ============================================================
- */
+============================================================
+LOAD EXAMINATIONS
+============================================================
+*/
 
 async function loadTeacherExaminations() {
 
     teacherExaminations = [];
 
 
-    const snapshot =
-        await getDocs(
-            collection(
-                db,
-                "examinations"
-            )
+    try {
+
+        const snapshot =
+            await getDocs(
+                collection(
+                    db,
+                    "examinations"
+                )
+            );
+
+
+        snapshot.forEach(
+            (examDoc) => {
+
+                const exam =
+                    examDoc.data();
+
+
+                const belongsToTeacherClass =
+                    teacherClasses.some(
+                        (classItem) => {
+
+                            return (
+                                normalize(
+                                    classItem.ClassName
+                                )
+                                ===
+                                normalize(
+                                    exam.ClassName
+                                )
+                            );
+
+                        }
+                    );
+
+
+                if (
+                    belongsToTeacherClass
+                ) {
+
+                    teacherExaminations.push({
+
+                        id:
+                            examDoc.id,
+
+                        ...exam
+
+                    });
+
+                }
+
+            }
         );
 
 
-    snapshot.forEach(
-        (examDoc) => {
+        console.log(
+            "Teacher Examinations:",
+            teacherExaminations
+        );
 
-            const exam =
-                examDoc.data();
+    }
 
+    catch (error) {
 
-            const belongsToTeacherClass =
-                teacherClasses.some(
-                    (classItem) => {
+        console.error(
+            "Unable to load examinations:",
+            error
+        );
 
-                        return (
-                            String(
-                                classItem.ClassName ||
-                                ""
-                            )
-                            .trim()
-                            .toLowerCase()
-                            ===
-                            String(
-                                exam.ClassName ||
-                                ""
-                            )
-                            .trim()
-                            .toLowerCase()
-                        );
-
-                    }
-                );
-
-
-            if (
-                belongsToTeacherClass
-            ) {
-
-                teacherExaminations.push({
-
-                    id:
-                        examDoc.id,
-
-                    ...exam
-
-                });
-
-            }
-
-        }
-    );
-
-
-    console.log(
-        "Teacher Examinations:",
-        teacherExaminations
-    );
+    }
 
 }
 
 
 /*
- * ============================================================
- * LOAD ATTENDANCE SETTINGS
- * ============================================================
- */
+============================================================
+LOAD ATTENDANCE SETTINGS
+============================================================
+*/
 
 async function loadAttendanceSettings() {
 
     attendanceSettings = null;
 
 
-    const snapshot =
-        await getDocs(
-            collection(
-                db,
-                "attendanceSettings"
-            )
+    try {
+
+        const snapshot =
+            await getDocs(
+                collection(
+                    db,
+                    "attendanceSettings"
+                )
+            );
+
+
+        if (!snapshot.empty) {
+
+            const latestDoc =
+                snapshot.docs[
+                    snapshot.docs.length - 1
+                ];
+
+
+            attendanceSettings =
+                latestDoc.data();
+
+        }
+
+
+        console.log(
+            "Attendance Settings:",
+            attendanceSettings
         );
-
-
-    if (!snapshot.empty) {
-
-        /*
-         * Admin currently creates settings
-         * using addDoc(), so there can be
-         * multiple records.
-         *
-         * For now we use the newest returned
-         * record.
-         */
-
-        const latestDoc =
-            snapshot.docs[
-                snapshot.docs.length - 1
-            ];
-
-
-        attendanceSettings =
-            latestDoc.data();
 
     }
 
+    catch (error) {
+
+        console.error(
+            "Unable to load attendance settings:",
+            error
+        );
+
+    }
+
+}
+
+
+/*
+============================================================
+UPDATE DASHBOARD
+============================================================
+
+IMPORTANT:
+This function does NOT replace the HTML.
+
+It only updates values inside the existing HTML.
+============================================================
+*/
+
+function updateTeacherDashboard() {
 
     console.log(
-        "Attendance Settings:",
-        attendanceSettings
+        "Updating Teacher Dashboard..."
+    );
+
+
+    updateTeacherInformation();
+
+    updateStatistics();
+
+    updateTeacherOverview();
+
+    updateTodaysSchedule();
+
+    updateMyClasses();
+
+    updateAttendanceOverview();
+
+    updatePendingTasks();
+
+    updateRecentActivities();
+
+    initializeDashboardButtons();
+
+
+    console.log(
+        "Teacher Dashboard Updated Successfully."
     );
 
 }
 
 
 /*
- * ============================================================
- * LOAD TEACHER DASHBOARD
- * ============================================================
- */
+============================================================
+TEACHER INFORMATION
+============================================================
+*/
 
-async function loadTeacherDashboard() {
-
-    if (!contentArea) {
-
-        console.error(
-            "content-area element not found."
-        );
-
-        return;
-
-    }
-
+function updateTeacherInformation() {
 
     const teacherName =
         currentEmployee?.Name ||
@@ -788,9 +894,156 @@ async function loadTeacherDashboard() {
         "Teaching Department";
 
 
-    const employeeID =
-        currentEmployee?.EmployeeID ||
-        "Not Available";
+    const academicSession =
+        currentEmployee?.AcademicSession ||
+        currentUserData?.AcademicSession ||
+        "2026–27";
+
+
+    setText(
+        "teacher-welcome",
+        `Welcome back, ${teacherName}!`
+    );
+
+
+    setText(
+        "teacher-name",
+        teacherName
+    );
+
+
+    setText(
+        "teacher-designation",
+        designation
+    );
+
+
+    setText(
+        "teacher-department",
+        department
+    );
+
+
+    setText(
+        "teacher-academic-session",
+        academicSession
+    );
+
+
+    setText(
+        "assigned-classes",
+        teacherClasses.length
+    );
+
+
+    /*
+    --------------------------------------------------------
+    FALLBACK FOR EXISTING HTML
+    --------------------------------------------------------
+    */
+
+    const welcomeElement =
+        document.querySelector(
+            ".welcome-title"
+        );
+
+
+    if (
+        welcomeElement &&
+        !document.getElementById(
+            "teacher-welcome"
+        )
+    ) {
+
+        welcomeElement.textContent =
+            `Welcome back, ${teacherName}!`;
+
+    }
+
+}
+
+
+/*
+============================================================
+TEACHER OVERVIEW CARD
+============================================================
+*/
+
+function updateTeacherOverview() {
+
+    const teacherName =
+        currentEmployee?.Name ||
+        currentUserData?.Name ||
+        currentUser?.displayName ||
+        "Teacher";
+
+
+    const designation =
+        currentEmployee?.Designation ||
+        currentUserData?.Role ||
+        "Teacher";
+
+
+    const department =
+        currentEmployee?.Department ||
+        currentUserData?.Department ||
+        "Teaching Department";
+
+
+    setText(
+        "overview-teacher-name",
+        teacherName
+    );
+
+
+    setText(
+        "overview-designation",
+        designation
+    );
+
+
+    setText(
+        "overview-department",
+        department
+    );
+
+
+    setText(
+        "overview-classes",
+        teacherClasses.length
+    );
+
+
+    setText(
+        "overview-subjects",
+        teacherSubjects.length
+    );
+
+
+    /*
+    --------------------------------------------------------
+    CIRCLE
+    --------------------------------------------------------
+    */
+
+    setText(
+        "overview-assigned-classes",
+        teacherClasses.length
+    );
+
+}
+
+
+/*
+============================================================
+QUICK STATISTICS
+============================================================
+*/
+
+function updateStatistics() {
+
+    const totalStudents =
+        teacherStudents.length;
 
 
     const totalClasses =
@@ -801,531 +1054,132 @@ async function loadTeacherDashboard() {
         teacherSubjects.length;
 
 
-    const totalStudents =
-        teacherStudents.length;
+    const todaysClasses =
+        getTodaysClasses().length;
 
 
-    const totalExaminations =
-        teacherExaminations.length;
+    const attendancePending =
+        calculateAttendancePending();
 
 
-    contentArea.innerHTML = `
+    setText(
+        "total-students",
+        totalStudents
+    );
 
-        <!-- =====================================================
-             WELCOME
-        ====================================================== -->
 
-        <div class="welcome-card">
+    setText(
+        "classes-assigned",
+        totalClasses
+    );
 
-            <h1>
-                Welcome Back, ${escapeHTML(teacherName)}!
-            </h1>
 
-            <p>
-                ${escapeHTML(designation)}
-                -
-                ${escapeHTML(department)}
-            </p>
+    setText(
+        "subjects-assigned",
+        totalSubjects
+    );
 
-        </div>
 
+    setText(
+        "todays-classes",
+        todaysClasses
+    );
 
-        <!-- =====================================================
-             TEACHER PROFILE
-        ====================================================== -->
 
-        <div class="recent-activities">
+    setText(
+        "attendance-pending",
+        attendancePending
+    );
 
-            <h2>Teacher Profile</h2>
 
-            <div class="teacher-profile-grid">
+    /*
+    --------------------------------------------------------
+    OPTIONAL SUBTEXTS
+    --------------------------------------------------------
+    */
 
-                <div>
-                    <strong>Name</strong>
-                    <p>
-                        ${escapeHTML(teacherName)}
-                    </p>
-                </div>
+    setText(
+        "students-subtext",
+        "Across assigned classes"
+    );
 
-                <div>
-                    <strong>Employee ID</strong>
-                    <p>
-                        ${escapeHTML(employeeID)}
-                    </p>
-                </div>
 
-                <div>
-                    <strong>Email</strong>
-                    <p>
-                        ${escapeHTML(
-                            currentUser.email ||
-                            "Not Available"
-                        )}
-                    </p>
-                </div>
+    setText(
+        "classes-subtext",
+        "Active classes"
+    );
 
-                <div>
-                    <strong>Department</strong>
-                    <p>
-                        ${escapeHTML(department)}
-                    </p>
-                </div>
 
-                <div>
-                    <strong>Designation</strong>
-                    <p>
-                        ${escapeHTML(designation)}
-                    </p>
-                </div>
+    setText(
+        "subjects-subtext",
+        getSubjectNames()
+    );
 
-                <div>
-                    <strong>Status</strong>
-                    <p>
-                        ${escapeHTML(
-                            currentEmployee?.Status ||
-                            currentUserData?.Status ||
-                            "Active"
-                        )}
-                    </p>
-                </div>
 
-            </div>
+    setText(
+        "today-classes-subtext",
+        `${todaysClasses} scheduled`
+    );
 
-        </div>
 
-
-        <!-- =====================================================
-             STATISTICS
-        ====================================================== -->
-
-        <div class="cards-container">
-
-            <div class="card">
-
-                <h3>
-                    My Classes
-                </h3>
-
-                <h1>
-                    ${totalClasses}
-                </h1>
-
-            </div>
-
-
-            <div class="card">
-
-                <h3>
-                    My Subjects
-                </h3>
-
-                <h1>
-                    ${totalSubjects}
-                </h1>
-
-            </div>
-
-
-            <div class="card">
-
-                <h3>
-                    Students
-                </h3>
-
-                <h1>
-                    ${totalStudents}
-                </h1>
-
-            </div>
-
-
-            <div class="card">
-
-                <h3>
-                    Examinations
-                </h3>
-
-                <h1>
-                    ${totalExaminations}
-                </h1>
-
-            </div>
-
-        </div>
-
-
-        <!-- =====================================================
-             MY SUBJECTS
-        ====================================================== -->
-
-        <div class="recent-activities">
-
-            <h2>
-                My Subjects
-            </h2>
-
-            <div
-                id="teacher-subjects-container"
-            >
-
-                ${renderSubjects()}
-
-            </div>
-
-        </div>
-
-
-        <!-- =====================================================
-             MY CLASSES
-        ====================================================== -->
-
-        <div class="recent-activities">
-
-            <h2>
-                My Classes
-            </h2>
-
-            <div
-                id="teacher-classes-container"
-            >
-
-                ${renderClasses()}
-
-            </div>
-
-        </div>
-
-
-        <!-- =====================================================
-             TODAY'S SCHEDULE
-        ====================================================== -->
-
-        <div class="recent-activities">
-
-            <h2>
-                My Timetable
-            </h2>
-
-            <div
-                id="teacher-timetable-container"
-            >
-
-                ${renderTimetable()}
-
-            </div>
-
-        </div>
-
-
-        <!-- =====================================================
-             ATTENDANCE SETTINGS
-        ====================================================== -->
-
-        <div class="recent-activities">
-
-            <h2>
-                Attendance Information
-            </h2>
-
-            ${renderAttendanceSettings()}
-
-        </div>
-
-
-        <!-- =====================================================
-             EXAMINATIONS
-        ====================================================== -->
-
-        <div class="recent-activities">
-
-            <h2>
-                Upcoming / Assigned Examinations
-            </h2>
-
-            <div
-                id="teacher-examinations-container"
-            >
-
-                ${renderExaminations()}
-
-            </div>
-
-        </div>
-
-
-        <!-- =====================================================
-             REFRESH
-        ====================================================== -->
-
-        <div class="quick-actions">
-
-            <h2>
-                Dashboard Actions
-            </h2>
-
-            <div class="action-buttons">
-
-                <button
-                    id="refresh-teacher-dashboard"
-                >
-                    Refresh Dashboard
-                </button>
-
-
-                <button
-                    id="teacher-logout-button"
-                >
-                    Logout
-                </button>
-
-            </div>
-
-        </div>
-
-    `;
-
-
-    initializeTeacherDashboardButtons();
+    setText(
+        "attendance-pending-subtext",
+        attendancePending > 0
+            ? "Requires attention"
+            : "All attendance complete"
+    );
 
 }
 
 
 /*
- * ============================================================
- * RENDER SUBJECTS
- * ============================================================
- */
+============================================================
+TODAY'S SCHEDULE
+============================================================
+*/
 
-function renderSubjects() {
+function updateTodaysSchedule() {
 
-    if (
-        teacherSubjects.length === 0
-    ) {
+    const container =
+        document.getElementById(
+            "today-schedule"
+        );
 
-        return `
-            <p>
-                No subjects have been assigned to you yet.
-            </p>
-        `;
+
+    if (!container) {
+
+        console.warn(
+            "today-schedule element not found."
+        );
+
+        return;
 
     }
 
 
-    let html = `
+    const todaysClasses =
+        getTodaysClasses();
 
-        <div class="teacher-subject-list">
-
-    `;
-
-
-    teacherSubjects.forEach(
-        (subject) => {
-
-            html += `
-
-                <div class="content-card">
-
-                    <h3>
-                        ${escapeHTML(
-                            subject.SubjectName ||
-                            "Unnamed Subject"
-                        )}
-                    </h3>
-
-                    <p>
-                        <strong>
-                            Subject Code:
-                        </strong>
-
-                        ${escapeHTML(
-                            subject.SubjectCode ||
-                            "N/A"
-                        )}
-                    </p>
-
-                    <p>
-                        <strong>
-                            Class:
-                        </strong>
-
-                        ${escapeHTML(
-                            subject.ClassName ||
-                            "N/A"
-                        )}
-                    </p>
-
-                    <p>
-                        <strong>
-                            Status:
-                        </strong>
-
-                        ${escapeHTML(
-                            subject.Status ||
-                            "Active"
-                        )}
-                    </p>
-
-                </div>
-
-            `;
-
-        }
-    );
-
-
-    html += `
-        </div>
-    `;
-
-
-    return html;
-
-}
-
-
-/*
- * ============================================================
- * RENDER CLASSES
- * ============================================================
- */
-
-function renderClasses() {
 
     if (
-        teacherClasses.length === 0
+        todaysClasses.length === 0
     ) {
 
-        return `
-            <p>
-                No classes have been assigned to you yet.
-            </p>
+        container.innerHTML = `
+
+            <div class="empty-state">
+
+                <i class="fa-solid fa-calendar-xmark"></i>
+
+                <p>
+                    No classes scheduled for today.
+                </p>
+
+            </div>
+
         `;
 
-    }
-
-
-    let html = `
-
-        <div class="teacher-class-list">
-
-    `;
-
-
-    teacherClasses.forEach(
-        (classItem) => {
-
-            const students =
-                teacherStudents.filter(
-                    (student) => {
-
-                        return (
-                            String(
-                                student.Class ||
-                                ""
-                            )
-                            .trim()
-                            .toLowerCase()
-                            ===
-                            String(
-                                classItem.ClassName ||
-                                ""
-                            )
-                            .trim()
-                            .toLowerCase()
-                        );
-
-                    }
-                );
-
-
-            html += `
-
-                <div class="content-card">
-
-                    <h3>
-                        Class
-                        ${escapeHTML(
-                            classItem.ClassName ||
-                            "N/A"
-                        )}
-
-                        ${
-                            classItem.Section
-                            ? "- " +
-                              escapeHTML(
-                                  classItem.Section
-                              )
-                            : ""
-                        }
-
-                    </h3>
-
-                    <p>
-                        <strong>
-                            Academic Session:
-                        </strong>
-
-                        ${escapeHTML(
-                            classItem.AcademicSession ||
-                            "N/A"
-                        )}
-                    </p>
-
-                    <p>
-                        <strong>
-                            Students:
-                        </strong>
-
-                        ${students.length}
-                    </p>
-
-                    <p>
-                        <strong>
-                            Status:
-                        </strong>
-
-                        ${escapeHTML(
-                            classItem.Status ||
-                            "Active"
-                        )}
-                    </p>
-
-                </div>
-
-            `;
-
-        }
-    );
-
-
-    html += `
-        </div>
-    `;
-
-
-    return html;
-
-}
-
-
-/*
- * ============================================================
- * RENDER TIMETABLE
- * ============================================================
- */
-
-function renderTimetable() {
-
-    if (
-        teacherTimetables.length === 0
-    ) {
-
-        return `
-            <p>
-                No timetable has been assigned
-                to your classes yet.
-            </p>
-        `;
+        return;
 
     }
 
@@ -1333,104 +1187,126 @@ function renderTimetable() {
     let html = "";
 
 
-    teacherTimetables.forEach(
-        (timetable) => {
+    todaysClasses.forEach(
+        (item, index) => {
+
+            const className =
+                item.className ||
+                "Class";
+
+
+            const subject =
+                item.subject ||
+                "Subject";
+
+
+            const room =
+                item.room ||
+                "Room not assigned";
+
+
+            const time =
+                item.time ||
+                `Period ${index + 1}`;
+
+
+            const completed =
+                item.completed;
+
 
             html += `
 
-                <div class="content-card">
+                <div class="schedule-item">
 
-                    <h3>
+                    <div class="schedule-time">
 
-                        ${escapeHTML(
-                            timetable.ClassName ||
-                            "Class"
-                        )}
+                        <strong>
+                            ${escapeHTML(time)}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="schedule-line">
+
+                        <span></span>
+
+                    </div>
+
+
+                    <div class="schedule-details">
+
+                        <small>
+                            PERIOD ${index + 1}
+                        </small>
+
+                        <h3>
+                            ${escapeHTML(subject)}
+                        </h3>
+
+                        <p>
+                            ${escapeHTML(className)}
+                            &nbsp; • &nbsp;
+                            ${escapeHTML(room)}
+                        </p>
+
+                    </div>
+
+
+                    <div class="schedule-status">
 
                         ${
-                            timetable.Section
-                            ? "- " +
-                              escapeHTML(
-                                  timetable.Section
-                              )
-                            : ""
+                            completed
+
+                            ?
+
+                            `
+                            <span class="status-completed">
+                                <i class="fa-solid fa-circle-check"></i>
+                                Completed
+                            </span>
+                            `
+
+                            :
+
+                            `
+                            <span class="status-pending">
+                                <i class="fa-solid fa-clock"></i>
+                                Pending
+                            </span>
+                            `
                         }
 
-                    </h3>
+                    </div>
 
 
-                    <div class="timetable-list">
+                    <div class="schedule-action">
 
-                        <p>
-                            <strong>
-                                Period 1:
-                            </strong>
+                        ${
+                            completed
 
-                            ${escapeHTML(
-                                timetable.Period1 ||
-                                "Free"
-                            )}
-                        </p>
+                            ?
 
+                            `
+                            <button
+                                class="schedule-view-btn"
+                                data-index="${index}"
+                            >
+                                View
+                            </button>
+                            `
 
-                        <p>
-                            <strong>
-                                Period 2:
-                            </strong>
+                            :
 
-                            ${escapeHTML(
-                                timetable.Period2 ||
-                                "Free"
-                            )}
-                        </p>
-
-
-                        <p>
-                            <strong>
-                                Period 3:
-                            </strong>
-
-                            ${escapeHTML(
-                                timetable.Period3 ||
-                                "Free"
-                            )}
-                        </p>
-
-
-                        <p>
-                            <strong>
-                                Period 4:
-                            </strong>
-
-                            ${escapeHTML(
-                                timetable.Period4 ||
-                                "Free"
-                            )}
-                        </p>
-
-
-                        <p>
-                            <strong>
-                                Period 5:
-                            </strong>
-
-                            ${escapeHTML(
-                                timetable.Period5 ||
-                                "Free"
-                            )}
-                        </p>
-
-
-                        <p>
-                            <strong>
-                                Period 6:
-                            </strong>
-
-                            ${escapeHTML(
-                                timetable.Period6 ||
-                                "Free"
-                            )}
-                        </p>
+                            `
+                            <button
+                                class="schedule-attendance-btn"
+                                data-index="${index}"
+                            >
+                                Attendance
+                            </button>
+                            `
+                        }
 
                     </div>
 
@@ -1442,181 +1318,347 @@ function renderTimetable() {
     );
 
 
-    return html;
+    container.innerHTML = html;
+
+
+    /*
+    --------------------------------------------------------
+    ATTACH BUTTON EVENTS
+    --------------------------------------------------------
+    */
+
+    container
+        .querySelectorAll(
+            ".schedule-view-btn"
+        )
+        .forEach(
+            (button) => {
+
+                button.addEventListener(
+                    "click",
+                    () => {
+
+                        const index =
+                            Number(
+                                button.dataset.index
+                            );
+
+
+                        const selected =
+                            todaysClasses[index];
+
+
+                        console.log(
+                            "Selected class:",
+                            selected
+                        );
+
+                    }
+                );
+
+            }
+        );
+
+
+    container
+        .querySelectorAll(
+            ".schedule-attendance-btn"
+        )
+        .forEach(
+            (button) => {
+
+                button.addEventListener(
+                    "click",
+                    () => {
+
+                        const index =
+                            Number(
+                                button.dataset.index
+                            );
+
+
+                        const selected =
+                            todaysClasses[index];
+
+
+                        handleAttendance(
+                            selected
+                        );
+
+                    }
+                );
+
+            }
+        );
 
 }
 
 
 /*
- * ============================================================
- * RENDER ATTENDANCE SETTINGS
- * ============================================================
- */
+============================================================
+MY CLASSES
+============================================================
+*/
 
-function renderAttendanceSettings() {
+function updateMyClasses() {
 
-    if (!attendanceSettings) {
+    const container =
+        document.getElementById(
+            "classes-container"
+        );
 
-        return `
-            <p>
-                Attendance settings have not
-                been configured yet.
-            </p>
-        `;
+
+    if (!container) {
+
+        console.warn(
+            "classes-container element not found."
+        );
+
+        return;
 
     }
 
-
-    return `
-
-        <div class="content-card">
-
-            <p>
-
-                <strong>
-                    Working Days:
-                </strong>
-
-                ${escapeHTML(
-                    attendanceSettings.WorkingDays ||
-                    "Not Set"
-                )}
-
-            </p>
-
-
-            <p>
-
-                <strong>
-                    Minimum Attendance:
-                </strong>
-
-                ${escapeHTML(
-                    attendanceSettings.MinimumAttendance ||
-                    "Not Set"
-                )}%
-
-            </p>
-
-
-            <p>
-
-                <strong>
-                    Attendance Lock Date:
-                </strong>
-
-                ${escapeHTML(
-                    attendanceSettings.AttendanceLockDate ||
-                    "Not Set"
-                )}
-
-            </p>
-
-        </div>
-
-    `;
-
-}
-
-
-/*
- * ============================================================
- * RENDER EXAMINATIONS
- * ============================================================
- */
-
-function renderExaminations() {
 
     if (
-        teacherExaminations.length === 0
+        teacherClasses.length === 0
     ) {
 
-        return `
-            <p>
-                No examinations are currently
-                assigned to your classes.
-            </p>
+        container.innerHTML = `
+
+            <div class="empty-state">
+
+                <i class="fa-solid fa-users"></i>
+
+                <p>
+                    No classes assigned yet.
+                </p>
+
+            </div>
+
         `;
+
+        return;
 
     }
 
 
-    let html = `
-
-        <div class="teacher-examination-list">
-
-    `;
+    let html = "";
 
 
-    teacherExaminations.forEach(
-        (exam) => {
+    teacherClasses.forEach(
+        (classItem) => {
+
+            const className =
+                classItem.ClassName ||
+                "Class";
+
+
+            const section =
+                classItem.Section ||
+                "";
+
+
+            const students =
+                teacherStudents.filter(
+                    (student) => {
+
+                        return (
+                            normalize(
+                                student.Class
+                            )
+                            ===
+                            normalize(
+                                className
+                            )
+                        );
+
+                    }
+                );
+
+
+            const classSubjects =
+                teacherSubjects.filter(
+                    (subject) => {
+
+                        return (
+                            normalize(
+                                subject.ClassName
+                            )
+                            ===
+                            normalize(
+                                className
+                            )
+                        );
+
+                    }
+                );
+
+
+            const attendance =
+                calculateClassAttendance(
+                    students
+                );
+
 
             html += `
 
-                <div class="content-card">
+                <div class="teacher-class-card">
+
+                    <div class="class-card-header">
+
+                        <div>
+
+                            <span class="class-badge">
+                                ${escapeHTML(
+                                    section ||
+                                    className
+                                )}
+                            </span>
+
+                        </div>
+
+
+                        <span class="attendance-badge">
+
+                            ${attendance}%
+
+                        </span>
+
+                    </div>
+
 
                     <h3>
-                        ${escapeHTML(
-                            exam.ExamName ||
-                            "Examination"
-                        )}
+                        ${escapeHTML(className)}
+                        ${
+                            section
+                                ? ` - ${escapeHTML(section)}`
+                                : ""
+                        }
                     </h3>
 
 
-                    <p>
+                    <p class="class-subject">
 
-                        <strong>
-                            Type:
-                        </strong>
+                        ${
+                            classSubjects.length > 0
 
-                        ${escapeHTML(
-                            exam.ExamType ||
-                            "N/A"
-                        )}
+                            ?
 
-                    </p>
+                            escapeHTML(
+                                classSubjects
+                                    .map(
+                                        subject =>
+                                            subject.SubjectName ||
+                                            "Subject"
+                                    )
+                                    .join(" • ")
+                            )
 
+                            :
 
-                    <p>
-
-                        <strong>
-                            Class:
-                        </strong>
-
-                        ${escapeHTML(
-                            exam.ClassName ||
-                            "N/A"
-                        )}
+                            "No subject information"
+                        }
 
                     </p>
 
 
-                    <p>
+                    <p class="subject-code">
 
-                        <strong>
-                            Maximum Marks:
-                        </strong>
+                        ${
+                            classSubjects.length > 0
 
-                        ${escapeHTML(
-                            exam.MaximumMarks ||
-                            "N/A"
-                        )}
+                            ?
 
-                    </p>
+                            escapeHTML(
+                                classSubjects
+                                    .map(
+                                        subject =>
+                                            subject.SubjectCode ||
+                                            ""
+                                    )
+                                    .filter(Boolean)
+                                    .join(" • ")
+                            )
 
+                            :
 
-                    <p>
-
-                        <strong>
-                            Passing Marks:
-                        </strong>
-
-                        ${escapeHTML(
-                            exam.PassingMarks ||
-                            "N/A"
-                        )}
+                            ""
+                        }
 
                     </p>
+
+
+                    <div class="class-students">
+
+                        <span>
+                            Students
+                        </span>
+
+                        <strong>
+                            ${students.length}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="class-actions">
+
+                        <button
+                            class="class-action-btn"
+                            data-class="${escapeAttribute(
+                                className
+                            )}"
+                        >
+
+                            <i class="fa-solid fa-calendar-check"></i>
+
+                            Attendance
+
+                        </button>
+
+
+                        <button
+                            class="class-action-btn"
+                            data-class="${escapeAttribute(
+                                className
+                            )}"
+                        >
+
+                            <i class="fa-solid fa-pen"></i>
+
+                            Assignments
+
+                        </button>
+
+
+                        <button
+                            class="class-action-btn"
+                            data-class="${escapeAttribute(
+                                className
+                            )}"
+                        >
+
+                            <i class="fa-solid fa-chart-column"></i>
+
+                            Marks
+
+                        </button>
+
+
+                        <button
+                            class="class-action-btn"
+                            data-class="${escapeAttribute(
+                                className
+                            )}"
+                        >
+
+                            <i class="fa-solid fa-users"></i>
+
+                            Students
+
+                        </button>
+
+                    </div>
 
                 </div>
 
@@ -1626,30 +1668,1017 @@ function renderExaminations() {
     );
 
 
-    html += `
-        </div>
-    `;
+    container.innerHTML = html;
 
 
-    return html;
+    /*
+    --------------------------------------------------------
+    CLASS BUTTONS
+    --------------------------------------------------------
+    */
+
+    container
+        .querySelectorAll(
+            ".class-action-btn"
+        )
+        .forEach(
+            (button) => {
+
+                button.addEventListener(
+                    "click",
+                    () => {
+
+                        const className =
+                            button.dataset.class;
+
+
+                        console.log(
+                            "Class action:",
+                            className,
+                            button.innerText.trim()
+                        );
+
+
+                        alert(
+                            `${button.innerText.trim()} for ${className} will be connected in the next module.`
+                        );
+
+                    }
+                );
+
+            }
+        );
 
 }
 
 
 /*
- * ============================================================
- * DASHBOARD BUTTONS
- * ============================================================
- */
+============================================================
+ATTENDANCE OVERVIEW
+============================================================
+*/
 
-function initializeTeacherDashboardButtons() {
+function updateAttendanceOverview() {
+
+    const container =
+        document.getElementById(
+            "attendance-overview"
+        );
+
+
+    if (!container) {
+        return;
+    }
+
+
+    const totalStudents =
+        teacherStudents.length;
+
+
+    const averageAttendance =
+        calculateOverallAttendance();
+
+
+    const belowThreshold =
+        calculateStudentsBelowThreshold();
+
+
+    const pending =
+        calculateAttendancePending();
+
+
+    container.innerHTML = `
+
+        <div class="attendance-overview-grid">
+
+            <div class="attendance-stat">
+
+                <span>
+                    Today's Attendance
+                </span>
+
+                <strong>
+                    ${
+                        pending === 0
+                            ? "Complete"
+                            : "Pending"
+                    }
+                </strong>
+
+            </div>
+
+
+            <div class="attendance-stat">
+
+                <span>
+                    Pending Attendance
+                </span>
+
+                <strong>
+                    ${pending}
+                </strong>
+
+            </div>
+
+
+            <div class="attendance-stat">
+
+                <span>
+                    Average Attendance
+                </span>
+
+                <strong>
+                    ${averageAttendance}%
+                </strong>
+
+            </div>
+
+
+            <div class="attendance-stat">
+
+                <span>
+                    Below Threshold
+                </span>
+
+                <strong>
+                    ${belowThreshold}
+                </strong>
+
+            </div>
+
+        </div>
+
+    `;
+
+
+    setText(
+        "attendance-average",
+        `${averageAttendance}%`
+    );
+
+
+    setText(
+        "students-below-threshold",
+        belowThreshold
+    );
+
+
+    setText(
+        "attendance-pending-count",
+        pending
+    );
+
+}
+
+
+/*
+============================================================
+PENDING TASKS
+============================================================
+*/
+
+function updatePendingTasks() {
+
+    const container =
+        document.getElementById(
+            "pending-tasks"
+        );
+
+
+    if (!container) {
+        return;
+    }
+
+
+    const attendancePending =
+        calculateAttendancePending();
+
+
+    const assignmentsPending =
+        0;
+
+
+    const marksPending =
+        teacherExaminations.length;
+
+
+    const leaveRequests =
+        0;
+
+
+    container.innerHTML = `
+
+        <div class="pending-task-list">
+
+            <div class="pending-task">
+
+                <div class="pending-task-icon attendance">
+                    <i class="fa-solid fa-calendar-check"></i>
+                </div>
+
+                <div>
+
+                    <strong>
+                        Attendance
+                    </strong>
+
+                    <p>
+                        ${attendancePending}
+                        pending
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="pending-task">
+
+                <div class="pending-task-icon assignments">
+                    <i class="fa-solid fa-file-pen"></i>
+                </div>
+
+                <div>
+
+                    <strong>
+                        Assignments
+                    </strong>
+
+                    <p>
+                        ${assignmentsPending}
+                        to evaluate
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="pending-task">
+
+                <div class="pending-task-icon marks">
+                    <i class="fa-solid fa-chart-column"></i>
+                </div>
+
+                <div>
+
+                    <strong>
+                        Marks
+                    </strong>
+
+                    <p>
+                        ${marksPending}
+                        examinations
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="pending-task">
+
+                <div class="pending-task-icon leave">
+                    <i class="fa-solid fa-envelope-open-text"></i>
+                </div>
+
+                <div>
+
+                    <strong>
+                        Leave Requests
+                    </strong>
+
+                    <p>
+                        ${leaveRequests}
+                        pending
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    `;
+
+}
+
+
+/*
+============================================================
+RECENT ACTIVITIES
+============================================================
+*/
+
+function updateRecentActivities() {
+
+    const container =
+        document.getElementById(
+            "recent-activities"
+        );
+
+
+    if (!container) {
+        return;
+    }
+
+
+    container.innerHTML = `
+
+        <div class="activity-list">
+
+            <div class="activity-item">
+
+                <div class="activity-icon">
+                    <i class="fa-solid fa-right-to-bracket"></i>
+                </div>
+
+                <div>
+
+                    <strong>
+                        Teacher dashboard loaded
+                    </strong>
+
+                    <p>
+                        Your academic information has been loaded successfully.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            ${
+                teacherClasses.length > 0
+
+                ?
+
+                `
+                <div class="activity-item">
+
+                    <div class="activity-icon">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+
+                    <div>
+
+                        <strong>
+                            Classes loaded
+                        </strong>
+
+                        <p>
+                            ${teacherClasses.length}
+                            assigned class(es) found.
+                        </p>
+
+                    </div>
+
+                </div>
+                `
+
+                :
+
+                ""
+            }
+
+
+            ${
+                teacherSubjects.length > 0
+
+                ?
+
+                `
+                <div class="activity-item">
+
+                    <div class="activity-icon">
+                        <i class="fa-solid fa-book"></i>
+                    </div>
+
+                    <div>
+
+                        <strong>
+                            Subjects loaded
+                        </strong>
+
+                        <p>
+                            ${teacherSubjects.length}
+                            assigned subject(s) found.
+                        </p>
+
+                    </div>
+
+                </div>
+                `
+
+                :
+
+                ""
+            }
+
+        </div>
+
+    `;
+
+}
+
+
+/*
+============================================================
+TODAY'S CLASSES
+============================================================
+*/
+
+function getTodaysClasses() {
+
+    const result = [];
 
 
     /*
-     * --------------------------------------------------------
-     * REFRESH
-     * --------------------------------------------------------
-     */
+    --------------------------------------------------------
+    CURRENT DAY
+    --------------------------------------------------------
+    */
+
+    const today =
+        new Date();
+
+
+    const dayName =
+        today
+            .toLocaleDateString(
+                "en-US",
+                {
+                    weekday: "long"
+                }
+            );
+
+
+    const dayShort =
+        today
+            .toLocaleDateString(
+                "en-US",
+                {
+                    weekday: "short"
+                }
+            );
+
+
+    teacherTimetables.forEach(
+        (timetable) => {
+
+            /*
+            ------------------------------------------------
+            Common possible day fields
+            ------------------------------------------------
+            */
+
+            const timetableDay =
+                timetable.Day ||
+                timetable.day ||
+                timetable.WeekDay ||
+                timetable.weekday ||
+                timetable.DayName ||
+                "";
+
+
+            /*
+            If timetable has a day and it doesn't
+            match today, skip it.
+            */
+
+            if (
+                timetableDay &&
+                normalize(timetableDay) !==
+                normalize(dayName) &&
+                normalize(timetableDay) !==
+                normalize(dayShort)
+            ) {
+
+                return;
+
+            }
+
+
+            /*
+            ------------------------------------------------
+            PERIODS
+            ------------------------------------------------
+            */
+
+            for (
+                let i = 1;
+                i <= 6;
+                i++
+            ) {
+
+                const periodValue =
+                    timetable[
+                        `Period${i}`
+                    ];
+
+
+                if (!periodValue) {
+                    continue;
+                }
+
+
+                const parsed =
+                    parseTimetablePeriod(
+                        periodValue
+                    );
+
+
+                result.push({
+
+                    className:
+                        timetable.ClassName ||
+                        "Class",
+
+                    section:
+                        timetable.Section ||
+                        "",
+
+                    subject:
+                        parsed.subject ||
+                        periodValue,
+
+                    time:
+                        parsed.time ||
+                        `Period ${i}`,
+
+                    room:
+                        parsed.room ||
+                        timetable.Room ||
+                        "Room not assigned",
+
+                    completed:
+                        false,
+
+                    period:
+                        i
+
+                });
+
+            }
+
+        }
+    );
+
+
+    return result;
+
+}
+
+
+/*
+============================================================
+PARSE TIMETABLE PERIOD
+============================================================
+*/
+
+function parseTimetablePeriod(
+    value
+) {
+
+    const text =
+        String(value || "").trim();
+
+
+    if (!text) {
+
+        return {
+
+            subject: "",
+            time: "",
+            room: ""
+
+        };
+
+    }
+
+
+    /*
+    Example possible value:
+
+    Mathematics
+    09:00 AM - 09:40 AM
+    Room 8-A
+    */
+
+
+    const timeMatch =
+        text.match(
+            /(\d{1,2}:\d{2}\s*(?:AM|PM)?\s*[-–]\s*\d{1,2}:\d{2}\s*(?:AM|PM)?)/i
+        );
+
+
+    const roomMatch =
+        text.match(
+            /(Room\s*[-A-Za-z0-9 ]+)/i
+        );
+
+
+    let subject =
+        text;
+
+
+    if (timeMatch) {
+
+        subject =
+            subject.replace(
+                timeMatch[0],
+                ""
+            );
+
+    }
+
+
+    if (roomMatch) {
+
+        subject =
+            subject.replace(
+                roomMatch[0],
+                ""
+            );
+
+    }
+
+
+    subject =
+        subject
+            .replace(
+                /\s+/g,
+                " "
+            )
+            .trim();
+
+
+    return {
+
+        subject:
+            subject || "Subject",
+
+        time:
+            timeMatch
+                ? timeMatch[0]
+                : "",
+
+        room:
+            roomMatch
+                ? roomMatch[0].trim()
+                : ""
+
+    };
+
+}
+
+
+/*
+============================================================
+ATTENDANCE PENDING
+============================================================
+*/
+
+function calculateAttendancePending() {
+
+    /*
+    Phase 1:
+    We determine pending attendance from today's
+    timetable.
+
+    Detailed attendance records will be connected
+    in the Attendance Module.
+    */
+
+    const todaysClasses =
+        getTodaysClasses();
+
+
+    if (
+        todaysClasses.length === 0
+    ) {
+
+        return 0;
+
+    }
+
+
+    /*
+    For now, assume today's classes are
+    pending until the attendance module
+    provides submission data.
+    */
+
+    return todaysClasses.length;
+
+}
+
+
+/*
+============================================================
+OVERALL ATTENDANCE
+============================================================
+*/
+
+function calculateOverallAttendance() {
+
+    /*
+    Current student documents may not yet
+    contain attendance percentage.
+
+    Therefore we only calculate when
+    attendance data exists.
+    */
+
+    const values = [];
+
+
+    teacherStudents.forEach(
+        (student) => {
+
+            const attendance =
+                Number(
+                    student.AttendancePercentage ??
+                    student.Attendance ??
+                    student.AttendancePercent
+                );
+
+
+            if (
+                Number.isFinite(attendance)
+            ) {
+
+                values.push(
+                    attendance
+                );
+
+            }
+
+        }
+    );
+
+
+    if (
+        values.length === 0
+    ) {
+
+        return 0;
+
+    }
+
+
+    const total =
+        values.reduce(
+            (
+                sum,
+                value
+            ) => sum + value,
+            0
+        );
+
+
+    return Number(
+        (
+            total /
+            values.length
+        ).toFixed(2)
+    );
+
+}
+
+
+/*
+============================================================
+CLASS ATTENDANCE
+============================================================
+*/
+
+function calculateClassAttendance(
+    students
+) {
+
+    if (
+        !students ||
+        students.length === 0
+    ) {
+
+        return 0;
+
+    }
+
+
+    const values = [];
+
+
+    students.forEach(
+        (student) => {
+
+            const attendance =
+                Number(
+                    student.AttendancePercentage ??
+                    student.Attendance ??
+                    student.AttendancePercent
+                );
+
+
+            if (
+                Number.isFinite(attendance)
+            ) {
+
+                values.push(
+                    attendance
+                );
+
+            }
+
+        }
+    );
+
+
+    if (
+        values.length === 0
+    ) {
+
+        return 0;
+
+    }
+
+
+    const total =
+        values.reduce(
+            (
+                sum,
+                value
+            ) => sum + value,
+            0
+        );
+
+
+    return Number(
+        (
+            total /
+            values.length
+        ).toFixed(2)
+    );
+
+}
+
+
+/*
+============================================================
+STUDENTS BELOW ATTENDANCE THRESHOLD
+============================================================
+*/
+
+function calculateStudentsBelowThreshold() {
+
+    const threshold =
+        Number(
+            attendanceSettings?.MinimumAttendance ||
+            75
+        );
+
+
+    return teacherStudents.filter(
+        (student) => {
+
+            const attendance =
+                Number(
+                    student.AttendancePercentage ??
+                    student.Attendance ??
+                    student.AttendancePercent
+                );
+
+
+            return (
+                Number.isFinite(attendance) &&
+                attendance < threshold
+            );
+
+        }
+    ).length;
+
+}
+
+
+/*
+============================================================
+SUBJECT NAMES
+============================================================
+*/
+
+function getSubjectNames() {
+
+    const names =
+        teacherSubjects
+            .map(
+                subject =>
+                    subject.SubjectName
+            )
+            .filter(Boolean);
+
+
+    if (
+        names.length === 0
+    ) {
+
+        return "Assigned subjects";
+
+    }
+
+
+    return names.join(" • ");
+
+}
+
+
+/*
+============================================================
+ATTENDANCE BUTTON
+============================================================
+*/
+
+function handleAttendance(
+    classData
+) {
+
+    console.log(
+        "Attendance selected:",
+        classData
+    );
+
+
+    /*
+    Attendance module will be connected
+    here in the next stage.
+    */
+
+    alert(
+        `Attendance for ${
+            classData.className ||
+            "this class"
+        } will be opened from the Attendance Module.`
+    );
+
+}
+
+
+/*
+============================================================
+REFRESH DASHBOARD
+============================================================
+*/
+
+async function refreshTeacherDashboard() {
+
+    console.log(
+        "Refreshing Teacher Dashboard..."
+    );
+
+
+    try {
+
+        await loadTeacherInformation();
+
+        updateTeacherDashboard();
+
+
+        console.log(
+            "Teacher Dashboard refreshed."
+        );
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Refresh Error:",
+            error
+        );
+
+
+        showDashboardError(
+            error
+        );
+
+    }
+
+}
+
+
+/*
+============================================================
+INITIALIZE DASHBOARD BUTTONS
+============================================================
+*/
+
+function initializeDashboardButtons() {
+
+    /*
+    --------------------------------------------------------
+    REFRESH
+    --------------------------------------------------------
+    */
 
     const refreshButton =
         document.getElementById(
@@ -1659,11 +2688,16 @@ function initializeTeacherDashboardButtons() {
 
     if (refreshButton) {
 
-        refreshButton.addEventListener(
-            "click",
+        refreshButton.onclick =
             async () => {
 
-                refreshButton.disabled = true;
+                refreshButton.disabled =
+                    true;
+
+
+                const oldText =
+                    refreshButton.innerText;
+
 
                 refreshButton.innerText =
                     "Refreshing...";
@@ -1671,38 +2705,32 @@ function initializeTeacherDashboardButtons() {
 
                 try {
 
-                    await loadTeacherInformation();
-
-                    await loadTeacherDashboard();
-
-                }
-                catch (error) {
-
-                    console.error(error);
-
-                    alert(
-                        error.message
-                    );
+                    await refreshTeacherDashboard();
 
                 }
 
+                finally {
 
-                refreshButton.disabled = false;
+                    refreshButton.disabled =
+                        false;
 
-                refreshButton.innerText =
-                    "Refresh Dashboard";
 
-            }
-        );
+                    refreshButton.innerText =
+                        oldText ||
+                        "Refresh";
+
+                }
+
+            };
 
     }
 
 
     /*
-     * --------------------------------------------------------
-     * LOGOUT
-     * --------------------------------------------------------
-     */
+    --------------------------------------------------------
+    LOGOUT
+    --------------------------------------------------------
+    */
 
     const logoutButton =
         document.getElementById(
@@ -1712,10 +2740,8 @@ function initializeTeacherDashboardButtons() {
 
     if (logoutButton) {
 
-        logoutButton.addEventListener(
-            "click",
-            logoutTeacher
-        );
+        logoutButton.onclick =
+            logoutTeacher;
 
     }
 
@@ -1723,10 +2749,10 @@ function initializeTeacherDashboardButtons() {
 
 
 /*
- * ============================================================
- * LOGOUT
- * ============================================================
- */
+============================================================
+LOGOUT
+============================================================
+*/
 
 async function logoutTeacher() {
 
@@ -1739,6 +2765,7 @@ async function logoutTeacher() {
             "./login-page.html";
 
     }
+
     catch (error) {
 
         console.error(
@@ -1758,15 +2785,62 @@ async function logoutTeacher() {
 
 
 /*
- * ============================================================
- * HTML ESCAPE
- *
- * Prevents Firestore values from being directly
- * interpreted as HTML.
- * ============================================================
- */
+============================================================
+UTILITY:
+SET TEXT
+============================================================
+*/
 
-function escapeHTML(value) {
+function setText(
+    id,
+    value
+) {
+
+    const element =
+        document.getElementById(id);
+
+
+    if (!element) {
+        return;
+    }
+
+
+    element.textContent =
+        value ?? "";
+
+}
+
+
+/*
+============================================================
+UTILITY:
+NORMALIZE
+============================================================
+*/
+
+function normalize(
+    value
+) {
+
+    return String(
+        value ?? ""
+    )
+        .trim()
+        .toLowerCase();
+
+}
+
+
+/*
+============================================================
+UTILITY:
+ESCAPE HTML
+============================================================
+*/
+
+function escapeHTML(
+    value
+) {
 
     if (
         value === null ||
@@ -1779,22 +2853,27 @@ function escapeHTML(value) {
 
 
     return String(value)
+
         .replace(
             /&/g,
             "&amp;"
         )
+
         .replace(
             /</g,
             "&lt;"
         )
+
         .replace(
             />/g,
             "&gt;"
         )
+
         .replace(
             /"/g,
             "&quot;"
         )
+
         .replace(
             /'/g,
             "&#039;"
@@ -1804,20 +2883,81 @@ function escapeHTML(value) {
 
 
 /*
- * ============================================================
- * GLOBAL FUNCTIONS
- * ============================================================
- */
+============================================================
+UTILITY:
+ESCAPE ATTRIBUTE
+============================================================
+*/
 
-window.loadTeacherDashboard =
-    loadTeacherDashboard;
+function escapeAttribute(
+    value
+) {
+
+    return escapeHTML(
+        value
+    );
+
+}
 
 
 /*
- * ============================================================
- * INITIAL LOG
- * ============================================================
- */
+============================================================
+DASHBOARD ERROR
+============================================================
+*/
+
+function showDashboardError(
+    error
+) {
+
+    console.error(
+        "Dashboard Error:",
+        error
+    );
+
+
+    const errorContainer =
+        document.getElementById(
+            "dashboard-error"
+        );
+
+
+    if (errorContainer) {
+
+        errorContainer.textContent =
+            "Unable to load teacher dashboard.";
+
+        errorContainer.style.display =
+            "block";
+
+    }
+
+}
+
+
+/*
+============================================================
+GLOBAL FUNCTIONS
+============================================================
+*/
+
+window.loadTeacherDashboard =
+    updateTeacherDashboard;
+
+
+window.refreshTeacherDashboard =
+    refreshTeacherDashboard;
+
+
+window.logoutTeacher =
+    logoutTeacher;
+
+
+/*
+============================================================
+INITIAL LOG
+============================================================
+*/
 
 console.log(
     "Teacher Dashboard JS Loaded Successfully."
