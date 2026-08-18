@@ -151,7 +151,7 @@ function getClassDisplayName(classData) {
 
 
 /* ============================================================
-   AUTHENTICATION + ROLE PROTECTION
+   AUTHENTICATION
    ============================================================ */
 
 onAuthStateChanged(auth, async (user) => {
@@ -159,13 +159,14 @@ onAuthStateChanged(auth, async (user) => {
     if (!user) {
 
         console.warn(
-            "No authenticated user found."
+            "No authenticated teacher found."
         );
 
         window.location.href =
             "./login-page.html";
 
         return;
+
     }
 
 
@@ -173,191 +174,18 @@ onAuthStateChanged(auth, async (user) => {
 
 
     console.log(
-        "Authenticated User:",
+        "Authenticated Teacher:",
         currentUser.email
     );
 
 
     try {
 
-        /*
-         * --------------------------------------------------------
-         * LOAD USER DOCUMENT
-         * --------------------------------------------------------
-         */
-
-        const userRef = doc(
-            db,
-            "users",
-            currentUser.uid
-        );
-
-
-        const userSnapshot =
-            await getDoc(userRef);
-
-
-        if (!userSnapshot.exists()) {
-
-            console.error(
-                "User document does not exist."
-            );
-
-            await signOut(auth);
-
-            window.location.href =
-                "./login-page.html";
-
-            return;
-
-        }
-
-
-        currentUserData =
-            userSnapshot.data();
-
-
-        console.log(
-            "Authenticated User Data:",
-            currentUserData
-        );
-
-
-        /*
-         * --------------------------------------------------------
-         * ROLE CHECK
-         * --------------------------------------------------------
-         */
-
-        const role =
-            String(
-                currentUserData.Role || ""
-            )
-            .trim()
-            .toLowerCase();
-
-
-        console.log(
-            "User Role:",
-            role
-        );
-
-
-        /*
-         * --------------------------------------------------------
-         * TEACHER ONLY
-         * --------------------------------------------------------
-         */
-
-        if (role !== "teacher") {
-
-            console.warn(
-                "Unauthorized access to Teacher Dashboard."
-            );
-
-
-            /*
-             * Admin
-             */
-
-            if (role === "admin") {
-
-                window.location.href =
-                    "./dashboard.html";
-
-                return;
-
-            }
-
-
-            /*
-             * Principal
-             */
-
-            if (role === "principal") {
-
-                window.location.href =
-                    "./principal-dashboard.html";
-
-                return;
-
-            }
-
-
-            /*
-             * Finance
-             */
-
-            if (role === "finance") {
-
-                window.location.href =
-                    "./fees-dashboard.html";
-
-                return;
-
-            }
-
-
-            /*
-             * Admission
-             */
-
-            if (role === "admission") {
-
-                window.location.href =
-                    "./admission-dashboard.html";
-
-                return;
-
-            }
-
-
-            /*
-             * Unknown role
-             */
-
-            alert(
-                "You are not authorized to access the Teacher Dashboard."
-            );
-
-
-            await signOut(auth);
-
-
-            window.location.href =
-                "./login-page.html";
-
-
-            return;
-
-        }
-
-
-        /*
-         * --------------------------------------------------------
-         * USER IS ACTUALLY A TEACHER
-         * --------------------------------------------------------
-         */
-
-        console.log(
-            "Teacher authentication successful."
-        );
-
-
-        /*
-         * Load teacher-specific data
-         */
+        await loadTeacherProfile();
 
         await loadTeacherClasses();
 
-
-        /*
-         * Update dashboard
-
-         */
-
         updateTeacherDashboard();
-
 
         initializeSidebar();
 
